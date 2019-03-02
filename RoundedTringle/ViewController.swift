@@ -27,21 +27,45 @@ class ViewController: UIViewController {
         let arrow = MBArrowedContainerView<UIView>()
         installContentView(arrow)
         
-        let targetView = UIView()
-        targetView.translatesAutoresizingMaskIntoConstraints = false
-        targetView.backgroundColor = .cyan
-        self.view.addSubview(targetView)
+        let bottomTargetView = TargetView()
+        let bottomTargetCenter = bottomTargetView.centerXAnchor.constraint(equalTo: self.view.centerXAnchor, constant: -40)
+        do {
+            bottomTargetView.translatesAutoresizingMaskIntoConstraints = false
+            bottomTargetView.backgroundColor = .cyan
+            self.view.addSubview(bottomTargetView)
+            
+            NSLayoutConstraint.activate([
+                bottomTargetView.topAnchor.constraint(equalTo: arrow.bottomAnchor, constant: 0),
+                bottomTargetCenter,
+                bottomTargetView.widthAnchor.constraint(equalToConstant: 80),
+                bottomTargetView.heightAnchor.constraint(equalToConstant: 30)
+                ])
+        }
         
-        NSLayoutConstraint.activate([
-            targetView.topAnchor.constraint(equalTo: arrow.bottomAnchor, constant: 8),
-            targetView.centerXAnchor.constraint(equalTo: self.view.centerXAnchor, constant: -40),
-            targetView.widthAnchor.constraint(equalToConstant: 80),
-            targetView.heightAnchor.constraint(equalToConstant: 30)
-            ])
+        let topTargetView = TargetView()
+        do {
+            topTargetView.translatesAutoresizingMaskIntoConstraints = false
+            topTargetView.backgroundColor = .cyan
+            self.view.addSubview(topTargetView)
+            
+            let targetCenter = topTargetView.centerXAnchor.constraint(equalTo: self.view.centerXAnchor, constant: 0)
+            
+            NSLayoutConstraint.activate([
+                arrow.topAnchor.constraint(equalTo: topTargetView.bottomAnchor, constant: 0),
+                targetCenter,
+                topTargetView.widthAnchor.constraint(equalToConstant: 80),
+                topTargetView.heightAnchor.constraint(equalToConstant: 30)
+                ])
+        }
         
-        arrow.setArrow(aligment: .toXCenterOf(targetView))
+        arrow.setArrowCenteredTo(targetView: bottomTargetView)
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+            bottomTargetCenter.constant = -100
+            arrow.setArrowCenteredTo(targetView: topTargetView)
+            arrow.updateArrowPosition()
+        }
     }
-
     
     private var button: UIButton?
     
@@ -73,8 +97,13 @@ class ViewController: UIViewController {
         NSLayoutConstraint.activate([
             subView.leadingAnchor.constraint(equalTo: superView.leadingAnchor, constant: 8),
             superView.trailingAnchor.constraint(equalTo: subView.trailingAnchor, constant: 8),
-            subView.topAnchor.constraint(equalTo: superView.topAnchor, constant: 80)
+            subView.topAnchor.constraint(equalTo: superView.topAnchor, constant: 130)
             ])
     }
 }
 
+final class TargetView: UIView {
+    override func layoutSubviews() {
+        super.layoutSubviews()
+    }
+}
