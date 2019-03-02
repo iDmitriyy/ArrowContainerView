@@ -97,7 +97,7 @@ open class MBArrowedContainerView<T: UIView>: UIView {
             // Обновление constraint'ов происходит только здесь
             updateConstraintsFor(arrowPosition: placement)
             
-            align(arrow: arrowView, withTrait: trait)
+            // align(arrow: arrowView, withTrait: trait)
         }
     }
     
@@ -132,8 +132,7 @@ extension MBArrowedContainerView {
         }
     }
     
-    /// реализация выравния стрелки относительно targetView
-    /// Двигает arrowView по координатам
+    /** реализация выравния стрелки относительно targetView. Двигает arrowView по координатам */
     private func align(arrow arrowView: UIView,
                        toHorizontalCenterOf targetView: UIView,
                        position: MBArrowedViewPlacement) {
@@ -178,15 +177,54 @@ extension MBArrowedContainerView {
         type(of: self).transform(arrow: arrowView, for: position)
     }
     
+//    private func align(arrow arrowView: UIView,
+//                       toHorizontalCenterOf targetView: UIView,
+//                       position: MBArrowedViewPlacement) {
+//        guard targetView !== self else { return }
+//        // FIXME: + проверить что targetView не является одной из subView
+//
+//        // центр targetView в собственной системе координат
+//        let targetConvertedCenter = targetView.convert(targetView.center, to: self)
+//
+//        /* рассчеты arrowOriginY завязаны на рассчеты updateConstraintsFor(arrowPosition: Position) т.к используют
+//         одни и те же константы */
+//        let arrowOriginY: CGFloat
+//        switch position {
+//        case .top:
+//            arrowOriginY = 0
+//        case .bottom:
+//            arrowOriginY = bounds.height - ArrowedConstants.arrowHeight
+//        }
+//
+//        let arrowCenterX: CGFloat
+//        do {
+//            let possibleArrowCenterX = targetConvertedCenter.x
+//            let arrowWidth = ArrowedConstants.arrowWidth
+//            let selfWidth = bounds.width
+//            // Стрелка должна быть видна полнстью. Проверяем позицию и корректируем при необходимости:
+//            if possibleArrowCenterX + (arrowWidth / 2) > selfWidth {
+//                arrowCenterX = selfWidth - (arrowWidth / 2) // Не позволяем уехать за границы справа
+//            } else if possibleArrowCenterX - (arrowWidth / 2) < 0 {
+//                arrowCenterX = 0 + (arrowWidth / 2) // Не позволяем уехать за границы слева
+//            } else {
+//                arrowCenterX = possibleArrowCenterX
+//            }
+//        }
+//
+//        let arrowFrame = CGRect(x: arrowCenterX - (ArrowedConstants.arrowWidth / 2),
+//                                y: arrowOriginY,
+//                                width: ArrowedConstants.arrowWidth,
+//                                height: ArrowedConstants.arrowHeight)
+//
+//        arrowView.frame = arrowFrame
+//
+//        type(of: self).transform(arrow: arrowView, for: position)
+//    }
+    
     private func getArrowPlacement(relativeTo targetView: UIView) -> MBArrowedViewPlacement {
         // Положение в координатном пространстве UIWindow
-        // self.superview?.convert(self.frame.origin, to: nil)
-        
-        //        let selfGlobalOrigin = self.convert(CGPoint.zero, from: nil)
-        //        let targetViewGlobalOrigin = targetView.convert(CGPoint.zero, from: nil)
-        
-        let selfGlobalOrigin = self.convert(CGPoint.zero, to: nil)
-        let targetViewGlobalOrigin = targetView.convert(CGPoint.zero, to: nil)
+        let selfGlobalOrigin = self.convert(self.center, to: nil)
+        let targetViewGlobalOrigin = targetView.convert(targetView.center, to: nil)
         
         let position: MBArrowedViewPlacement = selfGlobalOrigin.y < targetViewGlobalOrigin.y ? .bottom : .top
         return position
