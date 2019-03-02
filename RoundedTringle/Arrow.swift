@@ -68,7 +68,7 @@ open class MBArrowedContainerView<T: UIView>: UIView {
             if let trait = arrowParams {
                 switch trait.aligment {
                 case .toXCenterOf(let targetView):
-                    _ = getPositionForAligmentTo(targetView: targetView)
+                    _ = getArrowPlacement(targetView: targetView)
                 }
             }
             
@@ -90,19 +90,19 @@ open class MBArrowedContainerView<T: UIView>: UIView {
         case .toXCenterOf(let targetView):
             guard let superView = targetView.superview else { return }
             
-            let position = getPositionForAligmentTo(targetView: targetView)
-            let trait = ArrowParams(position: position, aligment: aligment)
+            let placement = getArrowPlacement(relativeTo: targetView)
+            let trait = ArrowParams(position: placement, aligment: aligment)
             arrowParams = trait
             
             // Обновление constraint'ов происходит только здесь
-            updateConstraintsFor(arrowPosition: position)
+            updateConstraintsFor(arrowPosition: placement)
             
             align(arrow: arrowView, withTrait: trait)
         }
     }
     
     
-    private func updateConstraintsFor(arrowPosition: MBArrowedViewPosition) {
+    private func updateConstraintsFor(arrowPosition: MBArrowedViewPlacement) {
         let top: CGFloat
         let bottom: CGFloat
         
@@ -136,7 +136,7 @@ extension MBArrowedContainerView {
     /// Двигает arrowView по координатам
     private func align(arrow arrowView: UIView,
                        toHorizontalCenterOf targetView: UIView,
-                       position: MBArrowedViewPosition) {
+                       position: MBArrowedViewPlacement) {
         guard targetView !== self else { return }
         // FIXME: + проверить что targetView не является одной из subView
         
@@ -178,7 +178,7 @@ extension MBArrowedContainerView {
         type(of: self).transform(arrow: arrowView, for: position)
     }
     
-    private func getPositionForAligmentTo(targetView: UIView) -> MBArrowedViewPosition {
+    private func getArrowPlacement(relativeTo targetView: UIView) -> MBArrowedViewPlacement {
         // Положение в координатном пространстве UIWindow
         // self.superview?.convert(self.frame.origin, to: nil)
         
@@ -188,7 +188,7 @@ extension MBArrowedContainerView {
         let selfGlobalOrigin = self.convert(CGPoint.zero, to: nil)
         let targetViewGlobalOrigin = targetView.convert(CGPoint.zero, to: nil)
         
-        let position: MBArrowedViewPosition = selfGlobalOrigin.y < targetViewGlobalOrigin.y ? .bottom : .top
+        let position: MBArrowedViewPlacement = selfGlobalOrigin.y < targetViewGlobalOrigin.y ? .bottom : .top
         return position
     }
 }
@@ -261,7 +261,7 @@ extension MBArrowedContainerView {
 
 extension MBArrowedContainerView {
     /// Вращает стрелку на 180 градусов чтоб она смотрела ввкерх либо вниз в зависимости от параметра position
-    private static func transform(arrow: UIView, for position: MBArrowedViewPosition) {
+    private static func transform(arrow: UIView, for position: MBArrowedViewPlacement) {
         // Предполагается, что на используемой в качестве стрелки картинке стрелка смотрит вниз
         let scaleY: CGFloat
         switch position {
@@ -327,7 +327,7 @@ extension MBArrowedContainerView {
 //    }
 
 private struct ArrowParams {
-    let position: MBArrowedViewPosition
+    let position: MBArrowedViewPlacement
     let aligment: MBArrowedViewAligment
 }
 
@@ -336,7 +336,7 @@ private enum ArrowedConstants {
     static let arrowHeight: CGFloat = 8
 }
 
-fileprivate enum MBArrowedViewPosition {
+fileprivate enum MBArrowedViewPlacement {
     case top
     case bottom
 }
