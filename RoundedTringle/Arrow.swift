@@ -68,7 +68,7 @@ open class MBArrowedContainerView<T: UIView>: UIView {
             if let trait = arrowParams {
                 switch trait.aligment {
                 case .toXCenterOf(let targetView):
-                    _ = getArrowPlacement(targetView: targetView)
+                    _ = getArrowPlacement(relativeTo: targetView)
                 }
             }
             
