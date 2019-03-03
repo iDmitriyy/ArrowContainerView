@@ -13,7 +13,7 @@ open class MBArrowedContainerView<T: UIView>: UIView {
     public var view: T = makeViewInstanse()
     
     open var contentViewInsets: UIEdgeInsets {
-        return UIEdgeInsets(top: 2, left: 2, bottom: 2, right: 2)
+        return UIEdgeInsets(top: 3, left: 3, bottom: 3, right: 3)
     }
     
     /// Do not call super when overriding this method
@@ -22,7 +22,7 @@ open class MBArrowedContainerView<T: UIView>: UIView {
     }
     
     // Private Properties
-    private var arrowView = UIImageView()
+    private var arrowView = UIView()
     
     private weak var contentTopConstraint: NSLayoutConstraint?
     private weak var contentBottomConstraint: NSLayoutConstraint?
@@ -50,39 +50,65 @@ open class MBArrowedContainerView<T: UIView>: UIView {
     public override init(frame: CGRect) {
         super.init(frame: frame)
         initialSetup()
+        
+        
+//        self.bringSubviewToFront(arrowView)
+//        let arrowFrame = CGRect(x: bounds.width - 40,
+//                                y: bounds.height - 10,
+//                                width: ArrowedConstants.arrowWidth,
+//                                height: ArrowedConstants.arrowHeight)
+//
+//        DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+//            UIView.animate(withDuration: ArrowedConstants.animationDuration) {
+//                self.arrowView.frame = arrowFrame
+//            }
+//        }
     }
     
     open override func layoutSubviews() {
         super.layoutSubviews()
-        
+        print("layoutSubviews")
         if let targetView = arrowParams.targetView, targetView.superview != nil {
             targetView.layoutIfNeeded()
             let placement = getArrowPlacement(relativeTo: targetView)
             
-            makeArrowVisible(true)
+            makeArrowVisible(true, animated: false)
             
             if placement == arrowParams.placement {
                 /* В этом ветвлении метод updateConstraintsFor(arrowPlacement:) не вызывается, так как:
                  1. это приведет к рекурсии layoutSubviews(). Указанный метод вызывается в других ветвления
                  2. при входе в это ветвление гарантировано, что указанный метод был ранее вызыван в setArrowCenteredTo(targetView:) */
-                align(arrow: arrowView, toHorizontalCenterOf: targetView, placement: placement)
-            } else {
-                arrowParams.placement = placement
+                
+                let arrowFrame = getArrowFrameFor(targetView: targetView, placement: placement)
                 
                 DispatchQueue.main.async {
-                    UIView.animate(withDuration: 0.5) {
-                        self.updateConstraintsFor(arrowPlacement: placement)
-                        self.layoutIfNeeded()
+                    UIView.animate(withDuration: ArrowedConstants.animationDuration) {
+                        self.arrowView.frame = arrowFrame
                     }
                 }
-                // updateConstraintsFor(arrowPlacement: placement) // indirectly call layoutIfNeeded(), which leads to calling layoutSubviews() on next update cycle
+                
+                // align(arrow: arrowView, toHorizontalCenterOf: targetView, placement: placement)
+            } else {
+                arrowParams.placement = placement
+                // updateConstraintValuesFor(arrowPlacement: placement)
+                
+                /*  Попадание в первое ветвление может произойти в 2-х сценариях: сразу либо после вызова
+                 метода updateConstraintValuesFor().
+                 Если у нас второй сценрий и мы анимруем constraint'ы то получается следующая ситуация: после изменения
+                 constraint'ов начинается анимация, мы попадаем в первое ветвление и изменения производимые методом
+                 align() тоже анимируются.
+                 
+                 */
+                
+                updateConstraintsFor(arrowPlacement: placement, animated: false)
             }
         } else {
             let placement: MBArrowedViewPlacement = .hidden
             
-            if arrowParams.placement != placement {
-                makeArrowVisible(false)
-                updateConstraintsFor(arrowPlacement: placement)
+            if arrowParams.placement != placement { // делаем проверку чтоб не прятать повторно
+                arrowParams.placement = placement
+                makeArrowVisible(false, animated: true)
+                updateConstraintsFor(arrowPlacement: placement, animated: true)
             }
         }
         
@@ -92,15 +118,20 @@ open class MBArrowedContainerView<T: UIView>: UIView {
         // сделать анимацию движения стрелки
         // по ходу придется класть контентную view в контейнер, т.к inset у контентной задается от стрелки
         // при первичной настройке настроить constraints и placement
+        // разобраться с inset'ами
     }
     
     // MARK: Public Interface
     func setArrowCenteredTo(targetView: UIView?) {
+        guard targetView !== self else { return }
+        
         arrowParams.targetView = targetView
         
         if let targetView = targetView, targetView.superview != nil {
             // Первчиная настройка constraint'ов
-            updateConstraintsFor(arrowPlacement: arrowParams.placement)
+            
+            // updateConstraintValuesFor(arrowPlacement: arrowParams.placement)
+            updateConstraintsFor(arrowPlacement: arrowParams.placement, animated: false)
         }
         
         setNeedsLayout()
@@ -111,7 +142,21 @@ open class MBArrowedContainerView<T: UIView>: UIView {
         setNeedsLayout() // Чтоб в следующем проходе laoyout'a вызывался layoutSubViews() где происходит позиционирование
     }
     
-    private func updateConstraintsFor(arrowPlacement: MBArrowedViewPlacement) {
+    private func updateConstraintsFor(arrowPlacement: MBArrowedViewPlacement, animated: Bool) {
+        if animated {
+            //DispatchQueue.main.async {
+                UIView.animate(withDuration: ArrowedConstants.animationDuration) {
+                    self.updateConstraintValuesFor(arrowPlacement: arrowPlacement)
+                    self.layoutIfNeeded()
+                }
+            //}
+        } else {
+            updateConstraintValuesFor(arrowPlacement: arrowPlacement)
+        }
+    }
+    
+    /// indirectly call setNeedsLayout(), which leads to calling layoutSubviews() on next update cycle
+    private func updateConstraintValuesFor(arrowPlacement: MBArrowedViewPlacement) {
         let top: CGFloat
         let bottom: CGFloat
         
@@ -131,42 +176,57 @@ open class MBArrowedContainerView<T: UIView>: UIView {
         contentBottomConstraint?.constant = bottom
     }
     
-    private func makeArrowVisible(_ visible: Bool) {
-        arrowView.isHidden = !visible
+    private func makeArrowVisible(_ visible: Bool, animated: Bool) {
+        if animated {
+            UIView.transition(with: arrowView,
+                              duration: ArrowedConstants.animationDuration,
+                              options: .transitionCrossDissolve,
+                              animations: {
+                                self.arrowView.isHidden = !visible
+            }, completion: nil)
+        } else {
+            arrowView.isHidden = !visible
+        }
     }
 }
 
 extension MBArrowedContainerView {
     // MARK: - Arrow Aligment Methods
     
-    /** Policy-метод. В зависимости от aligment вызывает разные реализации
-     Метод предназначен для вызова внутри layoutSubviews() чтоб двигать стрелку по координатам */
-//    private func align(arrow arrowView: UIView, withTrait trait: ArrowParams) {
-//        switch trait.aligment {
-//        case .toXCenterOf(let targetView):
-//            align(arrow: arrowView, toHorizontalCenterOf: targetView, position: trait.position)
-//        }
-//    }
-    
     /** реализация выравния стрелки относительно targetView. Двигает arrowView по координатам */
     private func align(arrow arrowView: UIView,
                        toHorizontalCenterOf targetView: UIView,
                        placement: MBArrowedViewPlacement) {
-        guard targetView !== self else { return }
-        // FIXME: + проверить что targetView не является одной из subView
-        // проверить, что bounds у targetView 0, т.к у нее layoutSubviews мог быть не вызван
         
-        let targetViewCenter = CGPoint(x: targetView.bounds.midX,
-                                       y: targetView.bounds.midY) // центр targetView в собственной системе координат
-        let targetConvertedCenter = targetView.convert(targetViewCenter, to: self)
+        let arrowFrame = getArrowFrameFor(targetView: targetView, placement: placement)
+        arrowView.frame = arrowFrame
         
+        type(of: self).rotateArrow(arrowView, for: placement)
+    }
+    
+    private func getArrowFrameFor(targetView: UIView, placement: MBArrowedViewPlacement) -> CGRect {
+        let originX = getArrowOriginX(forTargetView: targetView)
+        let originY = getArrowOriginY(forPlacement: placement)
         
-        
+        let arrowFrame = CGRect(x: originX,
+                                y: originY,
+                                width: ArrowedConstants.arrowWidth,
+                                height: ArrowedConstants.arrowHeight)
+        return arrowFrame
+    }
+    
+    private func getArrowOriginX(forTargetView targetView: UIView) -> CGFloat {
         let arrowHalfWidth = ArrowedConstants.arrowWidth / 2
+        
         let arrowCenterX: CGFloat
         do {
+            let targetViewCenter = CGPoint(x: targetView.bounds.midX,
+                                           y: targetView.bounds.midY) // центр targetView в её собственной системе координат
+            let targetConvertedCenter = targetView.convert(targetViewCenter, to: self)
+            
             let possibleArrowCenterX = targetConvertedCenter.x
             let selfWidth = bounds.width
+            
             // Стрелка должна быть видна полнстью. Проверяем позицию и корректируем при необходимости:
             if possibleArrowCenterX + arrowHalfWidth + contentViewInsets.right > selfWidth {
                 arrowCenterX = selfWidth - contentViewInsets.right - arrowHalfWidth // Не позволяем уехать за границы справа
@@ -177,29 +237,16 @@ extension MBArrowedContainerView {
             }
         }
         
-        let arrowOriginY = getArrowOriginY(forPlacement: placement)
-        
-        let arrowFrame = CGRect(x: arrowCenterX - arrowHalfWidth,
-                                y: arrowOriginY,
-                                width: ArrowedConstants.arrowWidth,
-                                height: ArrowedConstants.arrowHeight)
-        
-        arrowView.frame = arrowFrame
-        
-        type(of: self).rotateArrow(arrowView, for: placement)
+        let arrowOriginX = arrowCenterX - arrowHalfWidth
+        return arrowOriginX
     }
-    
-    
     
     private func getArrowOriginY(forPlacement placement: MBArrowedViewPlacement) -> CGFloat {
         let arrowOriginY: CGFloat
         switch placement {
-        case .top:
-            arrowOriginY = 0
-        case .bottom:
-            arrowOriginY = bounds.height - ArrowedConstants.arrowHeight
-        case .hidden:
-            arrowOriginY = 0
+        case .top: arrowOriginY = 0
+        case .bottom :arrowOriginY = bounds.height - ArrowedConstants.arrowHeight
+        case .hidden: arrowOriginY = 0
         }
         return arrowOriginY
     }
@@ -209,8 +256,8 @@ extension MBArrowedContainerView {
         let selfGlobalOrigin = self.convert(self.center, to: nil)
         let targetViewGlobalOrigin = targetView.convert(targetView.center, to: nil)
         
-        let position: MBArrowedViewPlacement = selfGlobalOrigin.y < targetViewGlobalOrigin.y ? .bottom : .top
-        return position
+        let arrowPlacement: MBArrowedViewPlacement = selfGlobalOrigin.y < targetViewGlobalOrigin.y ? .bottom : .top
+        return arrowPlacement
     }
 }
 
@@ -326,6 +373,8 @@ private struct ArrowParams {
 private enum ArrowedConstants {
     static let arrowWidth: CGFloat = 24
     static let arrowHeight: CGFloat = 8
+    
+    static let animationDuration: Double = 1.9
 }
 
 fileprivate enum MBArrowedViewPlacement {

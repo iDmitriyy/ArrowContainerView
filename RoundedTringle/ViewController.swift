@@ -60,9 +60,9 @@ class ViewController: UIViewController {
         
         arrow.setArrowCenteredTo(targetView: bottomTargetView)
         
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
             bottomTargetCenter.constant = -100
-            arrow.setArrowCenteredTo(targetView: topTargetView)
+            // arrow.setArrowCenteredTo(targetView: topTargetView)
             arrow.updateArrowPosition()
         }
     }

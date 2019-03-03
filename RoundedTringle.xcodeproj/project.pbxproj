@@ -103,8 +103,8 @@
 			children = (
 				8E8A5EA0221AF8EE008F612A /* AppDelegate.swift */,
 				8E8A5EA2221AF8EE008F612A /* ViewController.swift */,
-				8E6FB887221C5D92005B93BB /* Button.swift */,
 				8E6FB889221C5E0D005B93BB /* Arrow.swift */,
+				8E6FB887221C5D92005B93BB /* Button.swift */,
 				8E8A5EAC221AF8F0008F612A /* Info.plist */,
 				8E8A5EA4221AF8EE008F612A /* Main.storyboard */,
 				8E8A5EA7221AF8F0008F612A /* Assets.xcassets */,
