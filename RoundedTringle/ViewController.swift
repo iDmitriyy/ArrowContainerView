@@ -24,7 +24,7 @@ class ViewController: UIViewController {
     }
     
     private func setupArrowTest() {
-        let arrow = MBArrowContainerView(contentView: UIButton(type: .custom))
+        let arrow = ArrowContainerView(contentView: UIButton(type: .custom))
         installContentView(arrow)
         
         let bottomTargetView = TargetView()

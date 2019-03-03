@@ -1,6 +1,6 @@
 //
-//  Arrow.swift
-//  RoundedTringle
+//  ArrowContainerView.swift
+//  ArrowContainerView
 //
 //  Created by Dmitriy Ignatyev on 19/02/2019.
 //  Copyright © 2019 Dmitriy Ignatyev. All rights reserved.
@@ -11,7 +11,7 @@ import UIKit
 /**
  При попытке анимации constraint'ов targetView анимация у нее по факту не происходит
  */
-open class MBArrowContainerView<T: UIView>: UIView {
+open class ArrowContainerView<T: UIView>: UIView {
     /// This is content view
     public let view: T
     private let contentContainer = UIView()
@@ -124,7 +124,7 @@ open class MBArrowContainerView<T: UIView>: UIView {
     }
 }
 
-extension MBArrowContainerView {
+extension ArrowContainerView {
     // MARK: - Arrow Appearance
     private func makeArrowVisible(_ visible: Bool) {
         /* Возможен кейс, когда вызов метода layoutSubviews() спровоцирован работой UIView.animateWithDuration.
@@ -147,7 +147,7 @@ extension MBArrowContainerView {
     }
 }
 
-extension MBArrowContainerView {
+extension ArrowContainerView {
     // MARK: - Update Container Constraints
     
     /** Обновляет constraint'ы у contentContainer'а, тем самым двигая его вверх или вниз для освобождения свободного
@@ -188,7 +188,7 @@ extension MBArrowContainerView {
     }
 }
 
-extension MBArrowContainerView {
+extension ArrowContainerView {
     // MARK: - Arrow Aligment Methods
     
     // MARK: For TargetView
@@ -266,7 +266,7 @@ extension MBArrowContainerView {
     }
 }
 
-extension MBArrowContainerView {
+extension ArrowContainerView {
     // MARK: - Initial Configuration
     
     private func initialSetup() {
@@ -340,7 +340,7 @@ extension MBArrowContainerView {
     }
 }
 
-extension MBArrowContainerView {
+extension ArrowContainerView {
     // MARK: - Arrow Path
     
     /** Изаображение для стрелки. В исходном изображении стрелка должна смотреть вниз.
