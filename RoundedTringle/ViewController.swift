@@ -59,15 +59,11 @@ class ViewController: UIViewController {
                 ])
         }
         
-        arrow.setArrowCenteredTo(anchor: .toOffset(xOffset: 5, placement: .top))
+        arrow.setArrowCenteredTo(anchor: .toXCenterOf(targetView: bottomTargetView))
         arrow.view.setTitle("dsfsdfdsfsfs", for: .normal)
         
         DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-            
-            UIView.animate(withDuration: 1.2, animations: {
-                bottomTargetCenter.constant = 100
-                bottomTargetView.layoutIfNeeded()
-            })
+            bottomTargetCenter.constant = 100
             // arrow.setArrowCenteredTo(targetView: topTargetView)
             arrow.updateArrowPosition()
         }

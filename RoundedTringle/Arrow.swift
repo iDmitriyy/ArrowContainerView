@@ -20,13 +20,12 @@ open class ArrowContainerView<T: UIView>: UIView {
     public let view: T
     private let contentContainer = UIView()
     
-    open var contentViewInsets: UIEdgeInsets {
-        return UIEdgeInsets(top: 1, left: 3, bottom: 1, right: 3)
-    }
+    /// Значение нужно задать до добавления view в иерархию
+    public var contentViewInsets = UIEdgeInsets(top: 1, left: 3, bottom: 1, right: 3)
     
     // Private Properties
     private var arrowView = UIView()
-    //private var arrowParams = ArrowParams()
+    private var arrowParams = ArrowParams()
     
     private weak var containerTopConstraint: NSLayoutConstraint?
     private weak var containertBottomConstraint: NSLayoutConstraint?
@@ -70,19 +69,15 @@ open class ArrowContainerView<T: UIView>: UIView {
         }
     }
     
-    private var arrowParams = ArrowParams()
-    
     open override func layoutSubviews() {
         super.layoutSubviews()
-        
-        let currentPlacement = arrowParams.placement
         
         let arrowFrame: CGRect
         switch arrowParams.anchor {
         case .toOffset(let xOffset):
-            arrowFrame = getArrowFrameFor(xOffsetAnchor: xOffset, placement: currentPlacement)
+            arrowFrame = getArrowFrameFor(xOffsetAnchor: xOffset, placement: arrowParams.placement)
         case .toSelfWidth(let ratio):
-            arrowFrame = getArrowFrameFor(ratioAnchor: ratio, placement: currentPlacement)
+            arrowFrame = getArrowFrameFor(ratioAnchor: ratio, placement: arrowParams.placement)
         case .toXCenterOf(let box):
             if let targetView = box.targetView, targetView.superview != nil, targetView !== self {
                 targetView.layoutIfNeeded() // Обновляем размер targetView и получаем placement
@@ -96,17 +91,19 @@ open class ArrowContainerView<T: UIView>: UIView {
             }
         }
         
+        let currentPlacement = arrowParams.placement
+        
         if currentPlacement == arrowParams.previousPlacement {
             /* В этом ветвлении метод updateConstraintsFor(arrowPlacement:) не вызывается, так как:
              1. это приведет к рекурсии layoutSubviews(). Указанный метод вызывается в других ветвлениях
              2. при входе в это ветвление гарантировано, что указанный метод был ранее вызыван
              в setArrowCenteredTo(targetView:) */
-            //if arrowFrame != arrowView.frame, currentPlacement != .hidden {
+            if arrowFrame != arrowView.frame, currentPlacement != .hidden {
                 UIView.animate(withDuration: ArrowConstants.animationDuration) {
                     self.arrowView.frame = arrowFrame
                     type(of: self).rotateArrow(self.arrowView, for: currentPlacement)
                 }
-            //}
+            }
         } else {
             /* Попадание в первое ветвление может произойти в 2-х сценариях: либо сразу, либо после входа в это
              ветвление и вызова метода updateConstraintValuesFor().
@@ -124,43 +121,6 @@ open class ArrowContainerView<T: UIView>: UIView {
             }
         }
     }
-    
-    //    open override func layoutSubviews() {
-    //        super.layoutSubviews()
-    //
-    //        if let targetView = arrowParams.targetView, targetView.superview != nil {
-    //            targetView.layoutIfNeeded()
-    //            let placement = getArrowPlacement(relativeTo: targetView)
-    //
-    //            makeArrowVisible(true)
-    //
-    //            if placement == arrowParams.placement {
-    //                /* В этом ветвлении метод updateConstraintsFor(arrowPlacement:) не вызывается, так как:
-    //                 1. это приведет к рекурсии layoutSubviews(). Указанный метод вызывается в других ветвлениях
-    //                 2. при входе в это ветвление гарантировано, что указанный метод был ранее вызыван в setArrowCenteredTo(targetView:) */
-    //
-    //                UIView.animate(withDuration: ArrowConstants.animationDuration) {
-    //                    self.align(arrow: self.arrowView, toHorizontalCenterOf: targetView, placement: placement)
-    //                }
-    //            } else {
-    //                arrowParams.placement = placement
-    //                updateConstraintsFor(arrowPlacement: placement, animated: true)
-    //                /* Попадание в первое ветвление может произойти в 2-х сценариях: либо сразу, либо после входа в это
-    //                 ветвление и вызова метода updateConstraintValuesFor().
-    //                 Если у нас второй сценрий и мы анимруем constraint'ы то получается следующая ситуация: после изменения
-    //                 constraint'ов начинается анимация, мы попадаем в первое ветвление и изменения производимые методом
-    //                 align() тоже анимируются. */
-    //            }
-    //        } else {
-    //            let placement: MBArrowedViewPlacement = .hidden
-    //
-    //            if arrowParams.placement != placement { // делаем проверку чтоб не прятать повторно
-    //                arrowParams.placement = placement
-    //                makeArrowVisible(false)
-    //                updateConstraintsFor(arrowPlacement: placement, animated: true) // ! анимация по факту не работает
-    //            }
-    //        }
-    //    }
     
     public final func setArrowCenteredTo(anchor: ArrowViewXAnchor) {
         
@@ -316,7 +276,7 @@ extension ArrowContainerView {
         switch placement {
         case .top: arrowOriginY = 0
         case .bottom :arrowOriginY = bounds.height - ArrowConstants.arrowHeight
-        case .hidden: arrowOriginY = 0
+        case .hidden: arrowOriginY = -ArrowConstants.arrowHeight
         }
         return arrowOriginY
     }
@@ -401,14 +361,16 @@ extension ArrowContainerView {
     }
     
     private func setupArrowInitialApperanace() {
-        let frame = CGRect(x: 0, y: 0, width: ArrowConstants.arrowWidth, height: ArrowConstants.arrowHeight)
+        let layerFrame = CGRect(x: 0, y: 0, width: ArrowConstants.arrowWidth, height: ArrowConstants.arrowHeight)
         let bezierPath = type(of: self).getArrowBezierPath()
         
         let shapeLayer = CAShapeLayer()
-        shapeLayer.frame = frame
+        shapeLayer.frame = layerFrame
         shapeLayer.path = bezierPath.cgPath
         
-        arrowView.frame = frame
+        let arrowY = -ArrowConstants.arrowHeight
+        let larrowFrame = CGRect(x: 0, y: arrowY, width: ArrowConstants.arrowWidth, height: ArrowConstants.arrowHeight)
+        arrowView.frame = larrowFrame
         arrowView.layer.mask = shapeLayer
         arrowView.clipsToBounds = true
         
