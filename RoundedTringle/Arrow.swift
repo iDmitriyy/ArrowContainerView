@@ -10,6 +10,10 @@ import UIKit
 
 /**
  При попытке анимации constraint'ов targetView анимация у нее по факту не происходит
+ Ограничения:
+ - картинка стрелки должна быть задана на этапе инициализации
+ 
+ TODO: сделать переопределние картинки и её размеров
  */
 open class ArrowContainerView<T: UIView>: UIView {
     /// This is content view
@@ -22,7 +26,7 @@ open class ArrowContainerView<T: UIView>: UIView {
     
     // Private Properties
     private var arrowView = UIView()
-    private var arrowParams = ArrowParams()
+    //private var arrowParams = ArrowParams()
     
     private weak var containerTopConstraint: NSLayoutConstraint?
     private weak var containertBottomConstraint: NSLayoutConstraint?
@@ -67,55 +71,58 @@ open class ArrowContainerView<T: UIView>: UIView {
     }
     
     
-    
+    private var arrowParams = ArrowParams()
     
     open override func layoutSubviews() {
         super.layoutSubviews()
         
-        if let targetView = arrowParams.targetView, targetView.superview != nil {
-            targetView.layoutIfNeeded()
-            let placement = getArrowPlacement(relativeTo: targetView)
+        let finalPlacement: ArrowViewPlacement
+        switch arrowParams.anchor {
+        case .toOffset(let xOffset):
+            finalPlacement = arrowParams.placement
             
-            makeArrowVisible(true)
+        case .toSelfWidth(let ratio):
+            finalPlacement = arrowParams.placement
             
-            if placement == arrowParams.placement {
-                /* В этом ветвлении метод updateConstraintsFor(arrowPlacement:) не вызывается, так как:
-                 1. это приведет к рекурсии layoutSubviews(). Указанный метод вызывается в других ветвлениях
-                 2. при входе в это ветвление гарантировано, что указанный метод был ранее вызыван в setArrowCenteredTo(targetView:) */
+        case .toXCenterOf(let box):
+            if let targetView = box.view, targetView.superview != nil {
+                targetView.layoutIfNeeded() // Обновляем размер targetView и получаем placement
+                let placement = getArrowPlacement(relativeTo: targetView)
                 
-                UIView.animate(withDuration: ArrowConstants.animationDuration) {
-                    self.align(arrow: self.arrowView, toHorizontalCenterOf: targetView, placement: placement)
+                if placement == arrowParams.placement {
+                    /* В этом ветвлении метод updateConstraintsFor(arrowPlacement:) не вызывается, так как:
+                     1. это приведет к рекурсии layoutSubviews(). Указанный метод вызывается в других ветвлениях
+                     2. при входе в это ветвление гарантировано, что указанный метод был ранее вызыван
+                     в setArrowCenteredTo(targetView:) */
+//                    UIView.animate(withDuration: ArrowConstants.animationDuration) {
+//                        self.align(arrow: self.arrowView, toHorizontalCenterOf: targetView, placement: placement)
+//                    }
+                } else {
+                    /* Попадание в первое ветвление может произойти в 2-х сценариях: либо сразу, либо после входа в это
+                     ветвление и вызова метода updateConstraintValuesFor().
+                     Если у нас второй сценрий и мы анимруем constraint'ы то получается следующая ситуация: после изменения
+                     constraint'ов начинается анимация, мы попадаем в первое ветвление и изменения производимые методом
+                     align() тоже анимируются. */
+                    arrowParams.placement = placement
+                    updateConstraintsFor(arrowPlacement: placement, animated: true)
                 }
+                finalPlacement = placement
             } else {
-                arrowParams.placement = placement
-                updateConstraintsFor(arrowPlacement: placement, animated: true)
-                /* Попадание в первое ветвление может произойти в 2-х сценариях: либо сразу, либо после входа в это
-                 ветвление и вызова метода updateConstraintValuesFor().
-                 Если у нас второй сценрий и мы анимруем constraint'ы то получается следующая ситуация: после изменения
-                 constraint'ов начинается анимация, мы попадаем в первое ветвление и изменения производимые методом
-                 align() тоже анимируются. */
-            }
-        } else {
-            let placement: ArrowViewPlacement = .hidden
-            
-            if arrowParams.placement != placement { // делаем проверку чтоб не прятать повторно
-                arrowParams.placement = placement
-                makeArrowVisible(false)
-                updateConstraintsFor(arrowPlacement: placement, animated: true) // ! анимация по факту не работает
+                finalPlacement = .hidden
             }
         }
-    }
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
+        
+        type(of: self).rotateArrow(arrowView, for: finalPlacement)
+        
+        if arrowParams.placement != finalPlacement, finalPlacement == .hidden { // делаем проверку чтоб не прятать повторно
+            // ?? сохранять предыдущий placement
+            arrowParams.placement = finalPlacement
+            makeArrowVisible(false)
+            updateConstraintsFor(arrowPlacement: finalPlacement, animated: true) // ! анимация по факту не работает
+            
+            
+        }
+    } // --
     
     
     
@@ -159,17 +166,22 @@ open class ArrowContainerView<T: UIView>: UIView {
 //    }
     
     // MARK: - Public Interface
-    func setArrowCenteredTo(targetView: UIView?) {
+    public final func setArrowCenteredTo(targetView: UIView?) {
         guard targetView !== self else { return }
         
         arrowParams.targetView = targetView
         
         if let targetView = targetView, targetView.superview != nil {
             // Первчиная настройка constraint'ов. Не анимируется, потому что анимация произойдет в методе layoutSubviews()
+            makeArrowVisible(true)
             updateConstraintsFor(arrowPlacement: arrowParams.placement, animated: false)
         }
         
         setNeedsLayout()
+    }
+    
+    public final func hideArrow() {
+        
     }
     
     /** Метод для обновления положения стрелки, если targetView меняет размер или положение.
@@ -219,8 +231,8 @@ extension ArrowContainerView {
     }
     
     /**
-     Constraints update implementation
-     this method indirectly call setNeedsLayout() because of changing constraint values, which leads
+     Constraints update implementation.
+     This method indirectly call setNeedsLayout() because of changing constraints values, which leads
      to calling layoutSubviews() on next view update cycle */
     private func updateConstraintValuesFor(arrowPlacement: ArrowViewPlacement) {
         let top: CGFloat
@@ -244,61 +256,7 @@ extension ArrowContainerView {
 }
 
 extension ArrowContainerView {
-    // MARK: - Arrow Aligment Methods
-    
-    // MARK: For TargetView
-    /** реализация выравния стрелки относительно targetView. Двигает arrowView по координатам */
-    private func align(arrow arrowView: UIView,
-                       toHorizontalCenterOf targetView: UIView,
-                       placement: ArrowViewPlacement) {
-        
-        let arrowFrame = getArrowFrameFor(targetView: targetView, placement: placement)
-        arrowView.frame = arrowFrame
-        
-        type(of: self).rotateArrow(arrowView, for: placement)
-    }
-    
-    private func updateArrow(_ arrowView: UIView, withFrame frame: CGRect, placement: ArrowViewPlacement) {
-        
-    }
-    
-    
-    private func getArrowFrameFor(targetView: UIView, placement: ArrowViewPlacement) -> CGRect {
-        let originX = getArrowOriginX(forTargetView: targetView)
-        let originY = getArrowOriginY(forPlacement: placement)
-        
-        let arrowFrame = CGRect(x: originX,
-                                y: originY,
-                                width: ArrowConstants.arrowWidth,
-                                height: ArrowConstants.arrowHeight)
-        return arrowFrame
-    }
-    
-    private func getArrowOriginX(forTargetView targetView: UIView) -> CGFloat {
-        let arrowHalfWidth = ArrowConstants.arrowWidth / 2
-        
-        let arrowCenterX: CGFloat
-        do {
-            let targetViewCenter = CGPoint(x: targetView.bounds.midX,
-                                           y: targetView.bounds.midY) // центр targetView в её собственной системе координат
-            let targetConvertedCenter = targetView.convert(targetViewCenter, to: self)
-            
-            let possibleArrowCenterX = targetConvertedCenter.x
-            let selfWidth = bounds.width
-            
-            // Стрелка должна быть видна полнстью. Проверяем позицию и корректируем при необходимости:
-            if possibleArrowCenterX + arrowHalfWidth + contentViewInsets.right > selfWidth {
-                arrowCenterX = selfWidth - contentViewInsets.right - arrowHalfWidth // Не позволяем уехать за границы справа
-            } else if possibleArrowCenterX - arrowHalfWidth - contentViewInsets.left < 0 {
-                arrowCenterX = 0 + contentViewInsets.left + arrowHalfWidth // Не позволяем уехать за границы слева
-            } else {
-                arrowCenterX = possibleArrowCenterX
-            }
-        }
-        
-        let arrowOriginX = arrowCenterX - arrowHalfWidth
-        return arrowOriginX
-    }
+    // MARK: - Arrow Aligment: Common methods (reused by top level methods)
     
     private func getArrowOriginY(forPlacement placement: ArrowViewPlacement) -> CGFloat {
         let arrowOriginY: CGFloat
@@ -308,6 +266,68 @@ extension ArrowContainerView {
         case .hidden: arrowOriginY = 0
         }
         return arrowOriginY
+    }
+    
+    /** Скорректированное таким образом пложение (origin.x) стрелки по оси x, чтобы она не уехала за границы справа / слева
+     Входной параметр: точка по оси x, на которую должен ровняться центр стрелки */
+    private func adjustedArrowOriginXFor(possibleArrowCenterX: CGFloat) -> CGFloat {
+        let selfWidth = bounds.width
+        let arrowHalfWidth = ArrowConstants.arrowWidth / 2
+        
+        let arrowCenterX: CGFloat
+        // Стрелка должна быть видна полнстью. Проверяем possibleArrowCenterX и корректируем при необходимости:
+        if possibleArrowCenterX + arrowHalfWidth > selfWidth {
+            arrowCenterX = selfWidth - arrowHalfWidth // Не позволяем уехать за границы справа
+        } else if possibleArrowCenterX - arrowHalfWidth < 0 {
+            arrowCenterX = 0 + arrowHalfWidth // Не позволяем уехать за границы слева
+        } else {
+            arrowCenterX = possibleArrowCenterX
+        }
+        
+        let arrowOriginX = arrowCenterX - arrowHalfWidth
+        return arrowOriginX
+    }
+    
+    private func arrowFrameFor(adjustedOriginX: CGFloat, placement: ArrowViewPlacement) -> CGRect {
+        let originY = getArrowOriginY(forPlacement: placement)
+        return CGRect(x: adjustedOriginX,
+                      y: originY,
+                      width: ArrowConstants.arrowWidth,
+                      height: ArrowConstants.arrowHeight)
+    }
+}
+
+extension ArrowContainerView {
+    // MARK: - Arrow Aligment: Top level methods
+    
+    // MARK: For offset anchor
+    private func getArrowFrameFor(xOffsetAnchor xOffset: CGFloat, placement: ArrowViewPlacement) -> CGRect {
+        let possibleArrowCenterX = xOffset
+        let adjustedOriginX = adjustedArrowOriginXFor(possibleArrowCenterX: possibleArrowCenterX)
+        return arrowFrameFor(adjustedOriginX: adjustedOriginX, placement: placement)
+    }
+    
+    // MARK: For self width ratio anchor
+    private func getArrowFrameFor(ratioAnchor ratio: CGFloat, placement: ArrowViewPlacement) -> CGRect {
+        let possibleArrowCenterX = bounds.width * ratio
+        let adjustedOriginX = adjustedArrowOriginXFor(possibleArrowCenterX: possibleArrowCenterX)
+        return arrowFrameFor(adjustedOriginX: adjustedOriginX, placement: placement)
+    }
+    
+    // MARK: For targetView anchor
+    private func getArrowFrameFor(targetViewAnchor targetView: UIView, placement: ArrowViewPlacement) -> CGRect {
+        let adjustedOriginX = getAdjustedArrowOriginX(forTargetView: targetView)
+        return arrowFrameFor(adjustedOriginX: adjustedOriginX, placement: placement)
+    }
+    
+    private func getAdjustedArrowOriginX(forTargetView targetView: UIView) -> CGFloat {
+        let targetViewCenter = CGPoint(x: targetView.bounds.midX,
+                                       y: targetView.bounds.midY) // центр targetView в её собственной системе координат
+        
+        let targetConvertedCenter = targetView.convert(targetViewCenter, to: self)
+        let possibleArrowCenterX = targetConvertedCenter.x
+        
+        return adjustedArrowOriginXFor(possibleArrowCenterX: possibleArrowCenterX)
     }
     
     /// Always returns .bottom or .top, never .hidden
@@ -417,10 +437,10 @@ extension ArrowContainerView {
 }
 
 // MARK: - Nested Structs
-private struct ArrowParams {
-    var placement: ArrowViewPlacement = .hidden
-    weak var targetView: UIView?
-}
+//private struct ArrowParams {
+//    var placement: ArrowViewPlacement = .hidden
+//    weak var targetView: UIView?
+//}
 
 private enum ArrowConstants {
     static let arrowWidth: CGFloat = 34
@@ -435,7 +455,7 @@ public enum ArrowViewPlacement {
     case hidden
 }
 
-public enum ArrowViewAligment {
+public enum ArrowViewXAnchor {
     /** Указывает смещение в пикселях от левого края. На эту точку будет смотерть стрелка.
      Подходит, например, когда стрелка должна указывать на barButton */
     case toOffset(xOffset: CGFloat, placement: ArrowViewPlacement)
@@ -445,12 +465,13 @@ public enum ArrowViewAligment {
      Подходит для случаев, когда есть несколько заранее известных положений стрелки */
     case toSelfWidth(ratio: CGFloat, placement: ArrowViewPlacement)
     
-    /** Указывается view, на центр которой по оси x будет ровняться стрелка */
-    case toXCenterOf(UIView)
+    /** Указывается view, на центр которой по оси x будет ровняться стрелка.
+     Параметр placement будет высчитан автоматически */
+    case toXCenterOf(targetView: UIView)
 }
 
 /// For internal usage inside ArrowContainerView
-private enum ArrowViewPrivateAligment {
+private enum ArrowViewPrivateAnchor {
     case toOffset(xOffset: CGFloat)
     case toSelfWidth(ratio: CGFloat)
     case toXCenterOf(TargetViewBox)
@@ -464,10 +485,21 @@ private final class TargetViewBox {
     }
 }
 
-public enum ArrowedViewDirection {
-    case up
-    case down
+private struct ArrowParams {
+    // FIXME: may be make immutable
+    private(set) var previousPlacement: ArrowViewPlacement = .hidden
+    var placement: ArrowViewPlacement = .hidden {
+        didSet {
+            previousPlacement = oldValue
+        }
+    }
+    var anchor: ArrowViewPrivateAnchor = .toXCenterOf(TargetViewBox(view: nil))
 }
+
+//public enum ArrowedViewDirection {
+//    case up
+//    case down
+//}
 
 
 /**
