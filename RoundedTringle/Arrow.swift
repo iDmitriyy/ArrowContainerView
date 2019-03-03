@@ -10,7 +10,7 @@ import UIKit
 
 open class MBArrowContainerView<T: UIView>: UIView {
     /// This is content view
-    public var view: T = makeViewInstanse()
+    public let view: T = makeViewInstanse()
     
     open var contentViewInsets: UIEdgeInsets {
         return UIEdgeInsets(top: 3, left: 3, bottom: 3, right: 3)
@@ -73,17 +73,15 @@ open class MBArrowContainerView<T: UIView>: UIView {
                 // align(arrow: arrowView, toHorizontalCenterOf: targetView, placement: placement)
             } else {
                 arrowParams.placement = placement
+                updateConstraintsFor(arrowPlacement: placement, animated: true)
+                
                 // updateConstraintValuesFor(arrowPlacement: placement)
                 
-                /*  Попадание в первое ветвление может произойти в 2-х сценариях: сразу либо после вызова
-                 метода updateConstraintValuesFor().
+                /* Попадание в первое ветвление может произойти в 2-х сценариях: либо сразу, либо после входа в это
+                 ветвление и вызова метода updateConstraintValuesFor().
                  Если у нас второй сценрий и мы анимруем constraint'ы то получается следующая ситуация: после изменения
                  constraint'ов начинается анимация, мы попадаем в первое ветвление и изменения производимые методом
-                 align() тоже анимируются.
-                 
-                 */
-                
-                updateConstraintsFor(arrowPlacement: placement, animated: true)
+                 align() тоже анимируются. */
             }
         } else {
             let placement: MBArrowedViewPlacement = .hidden
@@ -224,7 +222,7 @@ extension MBArrowContainerView {
         }
         return arrowOriginY
     }
-    
+    /// Always returns .bottom or .top, never .hidden
     private func getArrowPlacement(relativeTo targetView: UIView) -> MBArrowedViewPlacement {
         // Положение в координатном пространстве UIWindow
         let selfGlobalOrigin = self.convert(self.center, to: nil)
@@ -297,15 +295,17 @@ extension MBArrowContainerView {
         arrowView.frame = frame
         arrowView.layer.mask = shapeLayer
         arrowView.clipsToBounds = true
+        
+        makeArrowVisible(false)
     }
 }
 
 extension MBArrowContainerView {
-    /// Вращает стрелку на 180 градусов чтоб она смотрела ввкерх либо вниз в зависимости от параметра position
-    private static func rotateArrow(_ arrow: UIView, for position: MBArrowedViewPlacement) {
+    /// Вращает стрелку на 180 градусов чтоб она смотрела ввкерх либо вниз в зависимости от параметра placement
+    private static func rotateArrow(_ arrow: UIView, for placement: MBArrowedViewPlacement) {
         // Предполагается, что на используемой в качестве стрелки картинке стрелка смотрит вниз
         let scaleY: CGFloat
-        switch position {
+        switch placement {
         case .top: scaleY = -1
         case .bottom: scaleY = 1
         case .hidden: scaleY = 1
@@ -338,7 +338,7 @@ private struct ArrowParams {
 }
 
 private enum ArrowedConstants {
-    static let arrowWidth: CGFloat = 24
+    static let arrowWidth: CGFloat = 34
     static let arrowHeight: CGFloat = 8
     
     static let animationDuration: Double = 2.15
@@ -367,7 +367,7 @@ fileprivate enum MBArrowedViewPlacement {
  - 1/3 - ровнять на точку равной 1/3 ширины
  - 1/4 - ровнять на точку равной 1/4 ширины
  */
-//    private func alignArrow(_ arrowView: UIView, toSelfWidth widthFraction: CGFloat, position: Position) {
+//    private func alignArrow(_ arrowView: UIView, toSelfWidth widthFraction: CGFloat, placement: MBArrowedViewPlacement) {
 //        let arrowWidth = arrowView.bounds.width
 //        let selfWidth = bounds.width
 //
@@ -384,7 +384,7 @@ fileprivate enum MBArrowedViewPlacement {
 //        }
 //
 //        let arrowFrame: CGRect
-//        switch position {
+//        switch placement {
 //        case .top:
 //            break
 //        case .bottom:

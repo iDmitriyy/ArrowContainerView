@@ -24,7 +24,7 @@ class ViewController: UIViewController {
     }
     
     private func setupArrowTest() {
-        let arrow = MBArrowContainerView<UIView>()
+        let arrow = MBArrowContainerView<UIButton>()
         installContentView(arrow)
         
         let bottomTargetView = TargetView()
@@ -59,11 +59,15 @@ class ViewController: UIViewController {
         }
         
         arrow.setArrowCenteredTo(targetView: bottomTargetView)
+        arrow.view.setTitle("dsfsdfdsfsfs", for: .normal)
         
         DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
             bottomTargetCenter.constant = -100
-            //arrow.setArrowCenteredTo(targetView: topTargetView)
-            arrow.updateArrowPosition()
+            UIView.animate(withDuration: 1.2, animations: {
+                bottomTargetView.layoutIfNeeded()
+            })
+            // arrow.setArrowCenteredTo(targetView: topTargetView)
+            //arrow.updateArrowPosition()
         }
     }
     
