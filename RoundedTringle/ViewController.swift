@@ -24,7 +24,7 @@ class ViewController: UIViewController {
     }
     
     private func setupArrowTest() {
-        let arrow = MBArrowedContainerView<UIView>()
+        let arrow = MBArrowContainerView<UIView>()
         installContentView(arrow)
         
         let bottomTargetView = TargetView()
@@ -62,7 +62,7 @@ class ViewController: UIViewController {
         
         DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
             bottomTargetCenter.constant = -100
-            // arrow.setArrowCenteredTo(targetView: topTargetView)
+            //arrow.setArrowCenteredTo(targetView: topTargetView)
             arrow.updateArrowPosition()
         }
     }
