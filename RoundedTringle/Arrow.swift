@@ -8,12 +8,16 @@
 
 import UIKit
 
+/**
+ При попытке анимации constraint'ов targetView анимация у нее по факту не происходит
+ */
 open class MBArrowContainerView<T: UIView>: UIView {
     /// This is content view
-    public let view: T = makeViewInstanse()
+    public let view: T
+    private let contentContainer = UIView()
     
     open var contentViewInsets: UIEdgeInsets {
-        return UIEdgeInsets(top: 3, left: 3, bottom: 3, right: 3)
+        return UIEdgeInsets(top: 1, left: 3, bottom: 1, right: 3)
     }
     
     /// Do not call super when overriding this method
@@ -25,30 +29,43 @@ open class MBArrowContainerView<T: UIView>: UIView {
     private var arrowView = UIView()
     private var arrowParams = ArrowParams()
     
-    private weak var contentTopConstraint: NSLayoutConstraint?
-    private weak var contentBottomConstraint: NSLayoutConstraint?
+    private weak var containerTopConstraint: NSLayoutConstraint?
+    private weak var containertBottomConstraint: NSLayoutConstraint?
     
-    // MARK: Overriden
+    ///
     open override var backgroundColor: UIColor? {
         didSet {
             let color = backgroundColor ?? .darkGray
-            super.backgroundColor = .lightGray // nil
+            super.backgroundColor = nil
             
             arrowView.tintColor = color
             arrowView.backgroundColor = .blue // FIXME: backgroundColor
             view.backgroundColor = color // FIXME: backgroundColor
+            contentContainer.backgroundColor = .orange
+            // сделать метод обновления цвета
         }
     }
     
+    // MARK: Initializers
     public required init?(coder aDecoder: NSCoder) {
+        view = type(of: self).makeViewInstanse()
         super.init(coder: aDecoder)
         initialSetup()
     }
     public override init(frame: CGRect) {
+        view = type(of: self).makeViewInstanse()
         super.init(frame: frame)
         initialSetup()
     }
     
+    /// Для случаев, когда в конструктор View нужно передать параметры. Например UIButton(type: .custom)
+    init(contentView: T) {
+        view = contentView
+        super.init(frame: .zero)
+        initialSetup()
+    }
+    
+    // MARK: Overriden
     open override func layoutSubviews() {
         super.layoutSubviews()
         
@@ -75,8 +92,6 @@ open class MBArrowContainerView<T: UIView>: UIView {
                 arrowParams.placement = placement
                 updateConstraintsFor(arrowPlacement: placement, animated: true)
                 
-                // updateConstraintValuesFor(arrowPlacement: placement)
-                
                 /* Попадание в первое ветвление может произойти в 2-х сценариях: либо сразу, либо после входа в это
                  ветвление и вызова метода updateConstraintValuesFor().
                  Если у нас второй сценрий и мы анимруем constraint'ы то получается следующая ситуация: после изменения
@@ -102,20 +117,30 @@ open class MBArrowContainerView<T: UIView>: UIView {
         // разобраться с inset'ами
     }
     
-    // MARK: Public Interface
+    // MARK: - Public Interface
     func setArrowCenteredTo(targetView: UIView?) {
         guard targetView !== self else { return }
         
         arrowParams.targetView = targetView
         
         if let targetView = targetView, targetView.superview != nil {
-            // Первчиная настройка constraint'ов. Не анимируется, потомучто анимация произойдет в методе layoutSubviews()
+            // Первчиная настройка constraint'ов. Не анимируется, потому что анимация произойдет в методе layoutSubviews()
             updateConstraintsFor(arrowPlacement: arrowParams.placement, animated: false)
         }
         
         setNeedsLayout()
     }
+}
+
+extension MBArrowContainerView {
+    private func makeArrowVisible(_ visible: Bool) {
+        /** Возможен кейс, когда вызов метода layoutSubviews() спровоцирован работой UIView.animateWithDuration.
+         В этом случае вызов UIView.Transition для анимации проперти '.isHidden' приводит к артефактам отрисовки.
+         По этой причине стрелка прячется и показывается без анимации */
+        arrowView.isHidden = !visible
+    }
     
+    // MARK: Update Constraints
     /** Метод для обновления положения стрелки, если targetView меняет размер или положение.
      Пример: изменение текста в UILabel */
     public final func updateArrowPosition() {
@@ -140,25 +165,18 @@ open class MBArrowContainerView<T: UIView>: UIView {
         
         switch arrowPlacement {
         case .top:
-            top = contentViewInsets.top + ArrowedConstants.arrowHeight
-            bottom = contentViewInsets.bottom
+            top = ArrowedConstants.arrowHeight
+            bottom = 0
         case .bottom:
-            top = contentViewInsets.top
-            bottom = contentViewInsets.bottom + ArrowedConstants.arrowHeight
+            top = 0
+            bottom = ArrowedConstants.arrowHeight
         case .hidden:
-            top = contentViewInsets.top
-            bottom = contentViewInsets.bottom
+            top = 0
+            bottom = 0
         }
         
-        contentTopConstraint?.constant = top
-        contentBottomConstraint?.constant = bottom
-    }
-    
-    private func makeArrowVisible(_ visible: Bool) {
-        /** Возможен кейс, когда вызов метода layoutSubviews() спровоцирован работой UIView.animateWithDuration.
-         В этом случае вызов UIView.Transition для анимации проперти '.isHidden' приводит к артефактам отрисовки.
-         По этой причине стрелка прячется и показывается без анимации */
-        arrowView.isHidden = !visible
+        containerTopConstraint?.constant = top
+        containertBottomConstraint?.constant = bottom
     }
 }
 
@@ -245,34 +263,44 @@ extension MBArrowContainerView {
     private func installViews() {
         translatesAutoresizingMaskIntoConstraints = false
         arrowView.translatesAutoresizingMaskIntoConstraints = false
-        addSubview(arrowView) // FIXME: показывать arrowView в самом нечале не совсем корректно
-        // Добавляем контентную view в иерархию
+        addSubview(arrowView)
+        
+        installContainerView()
         installContentView()
         sendSubviewToBack(arrowView)
     }
     
     /// Добавление view в иерархию
+    private func installContainerView() {
+        contentContainer.translatesAutoresizingMaskIntoConstraints = false
+        let superView: UIView = self
+        superView.addSubview(contentContainer)
+        
+        let top = contentContainer.topAnchor.constraint(equalTo: superView.topAnchor)
+        let bottom = superView.bottomAnchor.constraint(equalTo: contentContainer.bottomAnchor)
+        
+        self.containerTopConstraint = top
+        self.containertBottomConstraint = bottom
+        
+        NSLayoutConstraint.activate([
+            top,
+            bottom,
+            contentContainer.leadingAnchor.constraint(equalTo: superView.leadingAnchor),
+            superView.trailingAnchor.constraint(equalTo: contentContainer.trailingAnchor)])
+    }
+    
     private func installContentView() {
         view.translatesAutoresizingMaskIntoConstraints = false
-        
-        let superView: UIView = self
+        let superView: UIView = contentContainer
         superView.addSubview(view)
         
-        let top = view.topAnchor.constraint(equalTo: superView.topAnchor, constant: contentViewInsets.top)
-        let bottom = superView.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: contentViewInsets.bottom)
-        
-        let constraints: [NSLayoutConstraint] = [
+        NSLayoutConstraint.activate([
             view.leadingAnchor.constraint(equalTo: superView.leadingAnchor, constant: contentViewInsets.left),
             superView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: contentViewInsets.right),
-            top,
-            bottom
-        ]
-        NSLayoutConstraint.activate(constraints)
+            view.topAnchor.constraint(equalTo: superView.topAnchor, constant: contentViewInsets.top),
+            superView.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: contentViewInsets.bottom)])
         
         view.heightAnchor.constraint(equalToConstant: 100).isActive = true // FIXME: delete
-        
-        self.contentTopConstraint = top
-        self.contentBottomConstraint = bottom
     }
     
     private func setupInitialAppearance() {
@@ -315,8 +343,9 @@ extension MBArrowContainerView {
     }
     
     private static func getArrowBezierPath() -> UIBezierPath {
+        // При смене картинки нужно поменять значения arrowWidth и arrowHeight в ArrowedConstants
         let arrowPath = UIBezierPath()
-        // FIXME: Use
+        
         arrowPath.move(to: CGPoint(x: 0, y: 0))
         arrowPath.addCurve(to: CGPoint(x: 9, y: 3), controlPoint1: CGPoint(x: 0, y: 0), controlPoint2: CGPoint(x: 5, y: 0))
         arrowPath.addCurve(to: CGPoint(x: 16, y: 8), controlPoint1: CGPoint(x: 13, y: 6), controlPoint2: CGPoint(x: 13, y: 8))
@@ -325,13 +354,12 @@ extension MBArrowContainerView {
         arrowPath.addLine(to: CGPoint(x: 0, y: 0))
         
         arrowPath.close()
-        // backgroundColor?.setFill()
         arrowPath.fill()
-        
         return arrowPath
     }
 }
 
+// MARK: - Nested Structs
 private struct ArrowParams {
     var placement: MBArrowedViewPlacement = .hidden
     weak var targetView: UIView?
@@ -341,25 +369,22 @@ private enum ArrowedConstants {
     static let arrowWidth: CGFloat = 34
     static let arrowHeight: CGFloat = 8
     
-    static let animationDuration: Double = 2.15
+    static let animationDuration: Double = 0.15
 }
 
-fileprivate enum MBArrowedViewPlacement {
+public enum MBArrowedViewPlacement {
     case top
     case bottom
     case hidden
 }
 
-//public enum MBArrowedViewAligment {
-//    // case alignedToSelfWidth(CGFloat) // указывается точка на которую ровняться. Например 1/2 это середина, или 1/3
-//    case toXCenterOf(UIView) // FIXME: make view weak
-//}
+public enum MBArrowedViewAligment {
+    case toOffset(xOffset: CGFloat, placement: MBArrowedViewPlacement)
+    case toSelfWidth(fraction: CGFloat, placement: MBArrowedViewPlacement) // указывается пропорция на которую ровняться. Например 1/2 это середина, или 1/3
+    case toXCenterOf(UIView)
+}
 
-// MARK: NibLoadable Container
-//
-//open class MBArrowedXibContainerView<T>: MBArrowedContainerView<T> where T: NIbLoadable {
-//
-//}
+
 
 /**
  Примеры xFraction:
@@ -394,3 +419,9 @@ fileprivate enum MBArrowedViewPlacement {
 //
 //        // guard
 //    }
+
+// MARK: NibLoadable Container
+//
+//open class MBArrowedXibContainerView<T>: MBArrowedContainerView<T> where T: NIbLoadable {
+//
+//}

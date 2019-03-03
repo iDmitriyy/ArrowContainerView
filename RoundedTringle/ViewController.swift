@@ -24,11 +24,12 @@ class ViewController: UIViewController {
     }
     
     private func setupArrowTest() {
-        let arrow = MBArrowContainerView<UIButton>()
+        let arrow = MBArrowContainerView(contentView: UIButton(type: .custom))
         installContentView(arrow)
         
         let bottomTargetView = TargetView()
-        let bottomTargetCenter = bottomTargetView.centerXAnchor.constraint(equalTo: self.view.centerXAnchor, constant: -40)
+        let bottomTargetCenter = bottomTargetView.leadingAnchor.constraint(equalTo: self.view.leadingAnchor)
+        //bottomTargetView.centerXAnchor.constraint(equalTo: self.view.centerXAnchor, constant: -40)
         do {
             bottomTargetView.translatesAutoresizingMaskIntoConstraints = false
             bottomTargetView.backgroundColor = .cyan
@@ -62,12 +63,13 @@ class ViewController: UIViewController {
         arrow.view.setTitle("dsfsdfdsfsfs", for: .normal)
         
         DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-            bottomTargetCenter.constant = -100
+            
             UIView.animate(withDuration: 1.2, animations: {
+                bottomTargetCenter.constant = 100
                 bottomTargetView.layoutIfNeeded()
             })
             // arrow.setArrowCenteredTo(targetView: topTargetView)
-            //arrow.updateArrowPosition()
+            arrow.updateArrowPosition()
         }
     }
     
