@@ -20,11 +20,6 @@ open class MBArrowContainerView<T: UIView>: UIView {
         return UIEdgeInsets(top: 1, left: 3, bottom: 1, right: 3)
     }
     
-    /// Do not call super when overriding this method
-    open class func makeViewInstanse() -> T {
-        return T()
-    }
-    
     // Private Properties
     private var arrowView = UIView()
     private var arrowParams = ArrowParams()
@@ -32,21 +27,12 @@ open class MBArrowContainerView<T: UIView>: UIView {
     private weak var containerTopConstraint: NSLayoutConstraint?
     private weak var containertBottomConstraint: NSLayoutConstraint?
     
-    ///
-    open override var backgroundColor: UIColor? {
-        didSet {
-            let color = backgroundColor ?? .darkGray
-            super.backgroundColor = nil
-            
-            arrowView.tintColor = color
-            arrowView.backgroundColor = .blue // FIXME: backgroundColor
-            view.backgroundColor = color // FIXME: backgroundColor
-            contentContainer.backgroundColor = .orange
-            // сделать метод обновления цвета
-        }
+    /// Do not call super when overriding this method
+    open class func makeViewInstanse() -> T {
+        return T()
     }
     
-    // MARK: Initializers
+    // MARK: - Initializers
     public required init?(coder aDecoder: NSCoder) {
         view = type(of: self).makeViewInstanse()
         super.init(coder: aDecoder)
@@ -65,7 +51,21 @@ open class MBArrowContainerView<T: UIView>: UIView {
         initialSetup()
     }
     
-    // MARK: Overriden
+    // MARK: - Overriden
+    ///
+    open override var backgroundColor: UIColor? {
+        didSet {
+            let color = backgroundColor ?? .darkGray
+            super.backgroundColor = nil
+            
+            arrowView.tintColor = color
+            arrowView.backgroundColor = .blue // FIXME: backgroundColor
+            view.backgroundColor = color // FIXME: backgroundColor
+            contentContainer.backgroundColor = .orange
+            // сделать метод обновления цвета
+        }
+    }
+    
     open override func layoutSubviews() {
         super.layoutSubviews()
         
@@ -82,7 +82,7 @@ open class MBArrowContainerView<T: UIView>: UIView {
                 
                 let arrowFrame = getArrowFrameFor(targetView: targetView, placement: placement)
                 
-                UIView.animate(withDuration: ArrowedConstants.animationDuration) {
+                UIView.animate(withDuration: ArrowConstants.animationDuration) {
                     self.align(arrow: self.arrowView, toHorizontalCenterOf: targetView, placement: placement)
                     // self.arrowView.frame = arrowFrame
                 }
@@ -112,9 +112,9 @@ open class MBArrowContainerView<T: UIView>: UIView {
         // + сделать проверку targetView и ее superView, чтоб стрелка двигалась если размер поменялся
         // + сделать возможность без стрелки
         // + сделать анимацию движения стрелки
-        // по ходу придется класть контентную view в контейнер, т.к inset у контентной задается от стрелки
-        // при первичной настройке настроить constraints и placement
-        // разобраться с inset'ами
+        // + по ходу придется класть контентную view в контейнер, т.к inset у контентной задается от стрелки
+        // + при первичной настройке настроить constraints и placement
+        // + разобраться с inset'ами
     }
     
     // MARK: - Public Interface
@@ -130,26 +130,45 @@ open class MBArrowContainerView<T: UIView>: UIView {
         
         setNeedsLayout()
     }
-}
-
-extension MBArrowContainerView {
-    private func makeArrowVisible(_ visible: Bool) {
-        /** Возможен кейс, когда вызов метода layoutSubviews() спровоцирован работой UIView.animateWithDuration.
-         В этом случае вызов UIView.Transition для анимации проперти '.isHidden' приводит к артефактам отрисовки.
-         По этой причине стрелка прячется и показывается без анимации */
-        arrowView.isHidden = !visible
-    }
     
-    // MARK: Update Constraints
     /** Метод для обновления положения стрелки, если targetView меняет размер или положение.
      Пример: изменение текста в UILabel */
     public final func updateArrowPosition() {
         setNeedsLayout() // Чтоб в следующем проходе laoyout'a вызывался layoutSubViews() где происходит позиционирование
     }
+}
+
+extension MBArrowContainerView {
+    // MARK: - Arrow Appearance
+    private func makeArrowVisible(_ visible: Bool) {
+        /* Возможен кейс, когда вызов метода layoutSubviews() спровоцирован работой UIView.animateWithDuration.
+         В этом случае вызов UIView.Transition для анимации проперти '.isHidden' приводит к артефактам отрисовки.
+         По этой причине стрелка прячется и показывается без анимации */
+        arrowView.isHidden = !visible
+    }
     
+    /// Вращает стрелку на 180 градусов чтоб она смотрела вверх либо вниз в зависимости от параметра placement
+    private static func rotateArrow(_ arrow: UIView, for placement: MBArrowedViewPlacement) {
+        // Предполагается, что на используемой в качестве стрелки картинке стрелка смотрит вниз
+        let scaleY: CGFloat
+        switch placement {
+        case .top: scaleY = -1
+        case .bottom: scaleY = 1
+        case .hidden: scaleY = 1
+        }
+        
+        arrow.transform = CGAffineTransform(scaleX: 1, y: scaleY)
+    }
+}
+
+extension MBArrowContainerView {
+    // MARK: - Update Container Constraints
+    
+    /** Обновляет constraint'ы у contentContainer'а, тем самым двигая его вверх или вниз для освобождения свободного
+     пространства для отображения стрелки */
     private func updateConstraintsFor(arrowPlacement: MBArrowedViewPlacement, animated: Bool) {
         if animated {
-            UIView.animate(withDuration: ArrowedConstants.animationDuration) {
+            UIView.animate(withDuration: ArrowConstants.animationDuration) {
                 self.updateConstraintValuesFor(arrowPlacement: arrowPlacement)
                 self.layoutIfNeeded()
             }
@@ -158,18 +177,21 @@ extension MBArrowContainerView {
         }
     }
     
-    /// indirectly call setNeedsLayout(), which leads to calling layoutSubviews() on next update cycle
+    /**
+     Constraints update implementation
+     this method indirectly call setNeedsLayout() because of changing constraint values, which leads
+     to calling layoutSubviews() on next view update cycle */
     private func updateConstraintValuesFor(arrowPlacement: MBArrowedViewPlacement) {
         let top: CGFloat
         let bottom: CGFloat
         
         switch arrowPlacement {
         case .top:
-            top = ArrowedConstants.arrowHeight
+            top = ArrowConstants.arrowHeight
             bottom = 0
         case .bottom:
             top = 0
-            bottom = ArrowedConstants.arrowHeight
+            bottom = ArrowConstants.arrowHeight
         case .hidden:
             top = 0
             bottom = 0
@@ -200,13 +222,13 @@ extension MBArrowContainerView {
         
         let arrowFrame = CGRect(x: originX,
                                 y: originY,
-                                width: ArrowedConstants.arrowWidth,
-                                height: ArrowedConstants.arrowHeight)
+                                width: ArrowConstants.arrowWidth,
+                                height: ArrowConstants.arrowHeight)
         return arrowFrame
     }
     
     private func getArrowOriginX(forTargetView targetView: UIView) -> CGFloat {
-        let arrowHalfWidth = ArrowedConstants.arrowWidth / 2
+        let arrowHalfWidth = ArrowConstants.arrowWidth / 2
         
         let arrowCenterX: CGFloat
         do {
@@ -235,7 +257,7 @@ extension MBArrowContainerView {
         let arrowOriginY: CGFloat
         switch placement {
         case .top: arrowOriginY = 0
-        case .bottom :arrowOriginY = bounds.height - ArrowedConstants.arrowHeight
+        case .bottom :arrowOriginY = bounds.height - ArrowConstants.arrowHeight
         case .hidden: arrowOriginY = 0
         }
         return arrowOriginY
@@ -253,24 +275,24 @@ extension MBArrowContainerView {
 
 extension MBArrowContainerView {
     // MARK: - Initial Configuration
-    // Private
     
     private func initialSetup() {
         installViews()
         setupInitialAppearance()
     }
     
+    // MARK: Views Installing
     private func installViews() {
         translatesAutoresizingMaskIntoConstraints = false
-        arrowView.translatesAutoresizingMaskIntoConstraints = false
-        addSubview(arrowView)
         
         installContainerView()
         installContentView()
+        
+        arrowView.translatesAutoresizingMaskIntoConstraints = false
+        addSubview(arrowView)
         sendSubviewToBack(arrowView)
     }
     
-    /// Добавление view в иерархию
     private func installContainerView() {
         contentContainer.translatesAutoresizingMaskIntoConstraints = false
         let superView: UIView = self
@@ -303,22 +325,19 @@ extension MBArrowContainerView {
         view.heightAnchor.constraint(equalToConstant: 100).isActive = true // FIXME: delete
     }
     
+    // MARK: Setup initial appearance
     private func setupInitialAppearance() {
         backgroundColor = nil
         setupArrowInitialApperanace()
     }
     
     private func setupArrowInitialApperanace() {
-        let frame = CGRect(x: 0, y: 0, width: ArrowedConstants.arrowWidth, height: ArrowedConstants.arrowHeight)
+        let frame = CGRect(x: 0, y: 0, width: ArrowConstants.arrowWidth, height: ArrowConstants.arrowHeight)
+        let bezierPath = type(of: self).getArrowBezierPath()
         
         let shapeLayer = CAShapeLayer()
         shapeLayer.frame = frame
-        
-        let bezierPath = type(of: self).getArrowBezierPath()
         shapeLayer.path = bezierPath.cgPath
-        // apply other properties related to the path
-        
-        shapeLayer.fillColor = UIColor.black.cgColor
         
         arrowView.frame = frame
         arrowView.layer.mask = shapeLayer
@@ -329,21 +348,10 @@ extension MBArrowContainerView {
 }
 
 extension MBArrowContainerView {
-    /// Вращает стрелку на 180 градусов чтоб она смотрела ввкерх либо вниз в зависимости от параметра placement
-    private static func rotateArrow(_ arrow: UIView, for placement: MBArrowedViewPlacement) {
-        // Предполагается, что на используемой в качестве стрелки картинке стрелка смотрит вниз
-        let scaleY: CGFloat
-        switch placement {
-        case .top: scaleY = -1
-        case .bottom: scaleY = 1
-        case .hidden: scaleY = 1
-        }
-        
-        arrow.transform = CGAffineTransform(scaleX: 1, y: scaleY)
-    }
-    
+    // MARK: - Arrow Path
+    /** Изаображение для стрелки. В исходном изображении стрелка должна смотреть вниз.
+     Если картинка будет меняться, то нужно поменять значения arrowWidth и arrowHeight в ArrowedConstants*/
     private static func getArrowBezierPath() -> UIBezierPath {
-        // При смене картинки нужно поменять значения arrowWidth и arrowHeight в ArrowedConstants
         let arrowPath = UIBezierPath()
         
         arrowPath.move(to: CGPoint(x: 0, y: 0))
@@ -365,7 +373,7 @@ private struct ArrowParams {
     weak var targetView: UIView?
 }
 
-private enum ArrowedConstants {
+private enum ArrowConstants {
     static let arrowWidth: CGFloat = 34
     static let arrowHeight: CGFloat = 8
     
