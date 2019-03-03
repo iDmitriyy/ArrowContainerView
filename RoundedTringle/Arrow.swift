@@ -77,21 +77,15 @@ open class MBArrowContainerView<T: UIView>: UIView {
             
             if placement == arrowParams.placement {
                 /* В этом ветвлении метод updateConstraintsFor(arrowPlacement:) не вызывается, так как:
-                 1. это приведет к рекурсии layoutSubviews(). Указанный метод вызывается в других ветвления
+                 1. это приведет к рекурсии layoutSubviews(). Указанный метод вызывается в других ветвлениях
                  2. при входе в это ветвление гарантировано, что указанный метод был ранее вызыван в setArrowCenteredTo(targetView:) */
-                
-                let arrowFrame = getArrowFrameFor(targetView: targetView, placement: placement)
                 
                 UIView.animate(withDuration: ArrowConstants.animationDuration) {
                     self.align(arrow: self.arrowView, toHorizontalCenterOf: targetView, placement: placement)
-                    // self.arrowView.frame = arrowFrame
                 }
-                
-                // align(arrow: arrowView, toHorizontalCenterOf: targetView, placement: placement)
             } else {
                 arrowParams.placement = placement
                 updateConstraintsFor(arrowPlacement: placement, animated: true)
-                
                 /* Попадание в первое ветвление может произойти в 2-х сценариях: либо сразу, либо после входа в это
                  ветвление и вызова метода updateConstraintValuesFor().
                  Если у нас второй сценрий и мы анимруем constraint'ы то получается следующая ситуация: после изменения
@@ -107,14 +101,6 @@ open class MBArrowContainerView<T: UIView>: UIView {
                 updateConstraintsFor(arrowPlacement: placement, animated: true) // ! анимация по факту не работает
             }
         }
-        
-        // TODO:
-        // + сделать проверку targetView и ее superView, чтоб стрелка двигалась если размер поменялся
-        // + сделать возможность без стрелки
-        // + сделать анимацию движения стрелки
-        // + по ходу придется класть контентную view в контейнер, т.к inset у контентной задается от стрелки
-        // + при первичной настройке настроить constraints и placement
-        // + разобраться с inset'ами
     }
     
     // MARK: - Public Interface
@@ -134,7 +120,7 @@ open class MBArrowContainerView<T: UIView>: UIView {
     /** Метод для обновления положения стрелки, если targetView меняет размер или положение.
      Пример: изменение текста в UILabel */
     public final func updateArrowPosition() {
-        setNeedsLayout() // Чтоб в следующем проходе laoyout'a вызывался layoutSubViews() где происходит позиционирование
+        setNeedsLayout() // Чтоб в следующем проходе laoyout'a вызывался layoutSubViews(), где происходит позиционирование
     }
 }
 
@@ -205,6 +191,7 @@ extension MBArrowContainerView {
 extension MBArrowContainerView {
     // MARK: - Arrow Aligment Methods
     
+    // MARK: For TargetView
     /** реализация выравния стрелки относительно targetView. Двигает arrowView по координатам */
     private func align(arrow arrowView: UIView,
                        toHorizontalCenterOf targetView: UIView,
@@ -215,6 +202,11 @@ extension MBArrowContainerView {
         
         type(of: self).rotateArrow(arrowView, for: placement)
     }
+    
+    private func updateArrow(_ arrowView: UIView, withFrame frame: CGRect, placement: MBArrowedViewPlacement) {
+        
+    }
+    
     
     private func getArrowFrameFor(targetView: UIView, placement: MBArrowedViewPlacement) -> CGRect {
         let originX = getArrowOriginX(forTargetView: targetView)
@@ -262,6 +254,7 @@ extension MBArrowContainerView {
         }
         return arrowOriginY
     }
+    
     /// Always returns .bottom or .top, never .hidden
     private func getArrowPlacement(relativeTo targetView: UIView) -> MBArrowedViewPlacement {
         // Положение в координатном пространстве UIWindow
@@ -349,6 +342,7 @@ extension MBArrowContainerView {
 
 extension MBArrowContainerView {
     // MARK: - Arrow Path
+    
     /** Изаображение для стрелки. В исходном изображении стрелка должна смотреть вниз.
      Если картинка будет меняться, то нужно поменять значения arrowWidth и arrowHeight в ArrowedConstants*/
     private static func getArrowBezierPath() -> UIBezierPath {
@@ -387,11 +381,23 @@ public enum MBArrowedViewPlacement {
 }
 
 public enum MBArrowedViewAligment {
+    /** Указывает смещение в пикселях от левого края. На эту точку будет смотерть стрелка.
+     Подходит, например, когда стрелка должна указывать на barButton */
     case toOffset(xOffset: CGFloat, placement: MBArrowedViewPlacement)
-    case toSelfWidth(fraction: CGFloat, placement: MBArrowedViewPlacement) // указывается пропорция на которую ровняться. Например 1/2 это середина, или 1/3
+    
+    /** fraction - это пропорция от собственной ширины, на которую будет ровняться стрелка.
+     Например 1/2 - это середина. Дипазон значений от 0 до 1.
+     Подходит для случаев, когда есть несколько заранее известных положений стрелки */
+    case toSelfWidth(fraction: CGFloat, placement: MBArrowedViewPlacement)
+    
+    /** Указывается view, на центр которой по оси x будет ровняться стрелка */
     case toXCenterOf(UIView)
 }
 
+public enum MBArrowedViewDirection {
+    case up
+    case down
+}
 
 
 /**
