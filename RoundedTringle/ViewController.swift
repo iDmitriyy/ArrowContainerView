@@ -59,7 +59,7 @@ class ViewController: UIViewController {
                 ])
         }
         
-        arrow.setArrowCenteredTo(targetView: bottomTargetView)
+        arrow.setArrowCenteredTo(anchor: .toOffset(xOffset: 5, placement: .top))
         arrow.view.setTitle("dsfsdfdsfsfs", for: .normal)
         
         DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
