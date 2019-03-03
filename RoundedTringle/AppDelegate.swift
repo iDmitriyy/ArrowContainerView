@@ -15,7 +15,15 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-        // Override point for customization after application launch.
+        
+        var view: UIView? = UIView()
+        let params = ArrowParams(targetView: view)
+        
+        view = nil
+        
+        print("Arrow: " + String(describing: params.targetView) + "\n")
+        
+        
         return true
     }
 
@@ -42,5 +50,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     }
 
 
+}
+
+private struct ArrowParams {
+    weak var targetView: UIView?
 }
 
