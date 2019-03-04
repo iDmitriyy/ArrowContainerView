@@ -14,14 +14,14 @@ class ViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        //showArrowViews()
-        // Do any additional setup after loading the view, typically from a nib.
+        
+        showArrowViews()
+        // setupArrowTest()
     }
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         
-        setupArrowTest()
     }
     
     private func setupArrowTest() {
@@ -71,47 +71,72 @@ class ViewController: UIViewController {
     }
     
     func showArrowViews() {
-        let offsetTop = makeArrowView()
+        let offsetTop = makeArrowView(text: "Стрелка смотрит на 40-й пиксель по горизнтали сверху")
         offsetTop.setArrowCenteredTo(anchor: .toOffset(xOffset: 40, placement: .top))
         
-        let offsetBottom = makeArrowView()
+        let offsetBottom = makeArrowView(text: "Стрелка смотрит на 80-й пиксель по горизнтали снизу")
         offsetBottom.setArrowCenteredTo(anchor: .toOffset(xOffset: 80, placement: .bottom))
         
-        let ratioTop = makeArrowView()
-        ratioTop.setArrowCenteredTo(anchor: .toSelfWidth(ratio: 1/3, placement: .top))
+        let ratioTop = makeArrowView(text: "Стрелка смотрит на 1/2 ширины сверху")
+        ratioTop.setArrowCenteredTo(anchor: .toSelfWidth(ratio: 1/2, placement: .top))
         
-        let ratioBottom = makeArrowView()
-        ratioBottom.setArrowCenteredTo(anchor: .toSelfWidth(ratio: 1/2, placement: .bottom))
+        let ratioBottom = makeArrowView(text: "Стрелка смотрит на 1/6 ширины снизу")
+        ratioBottom.setArrowCenteredTo(anchor: .toSelfWidth(ratio: 1/6, placement: .bottom))
         
-        let arrowViewTargetTop = makeArrowView()
-        let topTarget = makeTarget(withLeading: 120)
-        arrowViewTargetTop.setArrowCenteredTo(anchor: .toXCenterOf(targetView: topTarget.target))
+        let arrowViewTargetTop = makeArrowView(text: "Стрелка смотрит розовый квадратик сверху")
+        let topTarget = makeTarget(withLeading: -30)
         
-        let arrowViewTargetBottom = makeArrowView()
-        let bottomTarget = makeTarget(withLeading: 160)
-        arrowViewTargetBottom.setArrowCenteredTo(anchor: .toXCenterOf(targetView: bottomTarget.target))
+        let arrowViewTargetBottom = makeArrowView(text: "Стрелка смотрит розовый квадратик снизу")
+        let bottomTarget = makeTarget(withLeading: 50)
         
-        let all: [UIView] = [offsetTop,
-                             offsetBottom,
-                             ratioTop,
-                             ratioBottom,
-                             topTarget.container,
-                             arrowViewTargetTop,
-                             arrowViewTargetBottom,
-                             bottomTarget.container]
+        let all: [UIView] = [
+            offsetTop,
+            makeSpacing(),
+            offsetBottom,
+            makeSpacing(),
+            ratioTop,
+            makeSpacing(),
+            ratioBottom,
+            makeSpacing(),
+            topTarget.container,
+            arrowViewTargetTop,
+            makeSpacing(),
+            arrowViewTargetBottom,
+            bottomTarget.container
+        ]
         
-        for view in all {
-            stackView.addArrangedSubview(view)
+//        for view in all {
+//            stackView.addArrangedSubview(view)
+//        }
+        
+        do {
+            var constraints: [NSLayoutConstraint] = []
+            var previousYAnchor: NSLayoutYAxisAnchor = view.safeAreaLayoutGuide.topAnchor
+            let superView: UIView = view
+            
+            for subView in all {
+                superView.addSubview(subView)
+                constraints.append(contentsOf: [
+                    subView.leadingAnchor.constraint(equalTo: superView.leadingAnchor),
+                    superView.trailingAnchor.constraint(equalTo: subView.trailingAnchor),
+                    subView.topAnchor.constraint(equalTo: previousYAnchor)])
+                
+                previousYAnchor = subView.bottomAnchor
+            }
+            
+            NSLayoutConstraint.activate(constraints)
         }
         
+        arrowViewTargetTop.setArrowCenteredTo(anchor: .toXCenterOf(targetView: topTarget.target))
+        arrowViewTargetBottom.setArrowCenteredTo(anchor: .toXCenterOf(targetView: bottomTarget.target))
     }
     
-    func makeArrowView() -> ArrowContainerView<UILabel> {
-        let text = "Lorem ipsum dolor sit er elit lamet, consectetaur cillium adipisicing pecu, sed do eiusmod tempor"
+    func makeArrowView(text: String) -> ArrowContainerView<UILabel> {
         let arrowView = ArrowContainerView(contentView: UILabel())
         arrowView.contentViewInsets = UIEdgeInsets(top: 8, left: 16, bottom: 8, right: 16)
         arrowView.view.numberOfLines = 0
         arrowView.view.text = text
+        arrowView.backgroundColor = .lightGray
         return arrowView
     }
     
@@ -127,7 +152,7 @@ class ViewController: UIViewController {
             superView.addSubview(targetView)
             
             NSLayoutConstraint.activate([
-                targetView.leadingAnchor.constraint(equalTo: superView.leadingAnchor, constant: leading),
+                targetView.centerXAnchor.constraint(equalTo: superView.centerXAnchor, constant: leading),
                 targetView.topAnchor.constraint(equalTo: superView.topAnchor),
                 superView.bottomAnchor.constraint(equalTo: targetView.bottomAnchor),
                 targetView.widthAnchor.constraint(equalToConstant: 40),
@@ -135,6 +160,13 @@ class ViewController: UIViewController {
             
         }
         return (targetView, targetViewContainer)
+    }
+    
+    func makeSpacing() -> UIView {
+        let view = UIView()
+        view.translatesAutoresizingMaskIntoConstraints = false
+        view.heightAnchor.constraint(equalToConstant: 16).isActive = true
+        return view
     }
     
     private var button: UIButton?

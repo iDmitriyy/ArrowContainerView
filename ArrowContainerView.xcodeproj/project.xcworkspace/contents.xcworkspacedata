@@ -2,6 +2,6 @@
 <Workspace
    version = "1.0">
    <FileRef
-      location = "self:RoundedTringle.xcodeproj">
+      location = "self:/Users/dmitriyignatyev/Develop/ArrowedView/ArrowContainerView.xcodeproj">
    </FileRef>
 </Workspace>

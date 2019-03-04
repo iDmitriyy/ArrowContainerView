@@ -21,7 +21,12 @@ open class ArrowContainerView<T: UIView>: UIView {
     private let contentContainer = UIView()
     
     /// Значение нужно задать до добавления view в иерархию
-    public var contentViewInsets = UIEdgeInsets(top: 1, left: 3, bottom: 1, right: 3)
+    public var contentViewInsets = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 0) {
+        didSet { contentConstraints.updateWith(contentViewInsets) }
+    }
+    
+    /// Значения в contentConstraints задаются 1 раз при певичной настройке
+    private let contentConstraints = ContentConstraints()
     
     // Private Properties
     private var arrowView = UIView()
@@ -58,14 +63,12 @@ open class ArrowContainerView<T: UIView>: UIView {
     ///
     open override var backgroundColor: UIColor? {
         didSet {
-            let color = backgroundColor ?? .darkGray
+            let color: UIColor = backgroundColor ?? (view.backgroundColor ?? .white)
             super.backgroundColor = nil
             
             arrowView.tintColor = color
-            arrowView.backgroundColor = .blue // FIXME: backgroundColor
-            view.backgroundColor = color // FIXME: backgroundColor
-            contentContainer.backgroundColor = .orange
-            // сделать метод обновления цвета
+            arrowView.backgroundColor = color
+            contentContainer.backgroundColor = color
         }
     }
     
@@ -252,8 +255,11 @@ extension ArrowContainerView {
     /// Always returns .bottom or .top, never .hidden
     private func getArrowPlacement(relativeTo targetView: UIView) -> ArrowViewPlacement {
         // Положение в координатном пространстве UIWindow
-        let selfGlobalOrigin = self.convert(self.center, to: nil)
-        let targetViewGlobalOrigin = targetView.convert(targetView.center, to: nil)
+        let superView = self.superview
+        let selfGlobalOrigin = self.convert(CGPoint(x: self.bounds.midX, y: self.bounds.midY),
+                                            to: nil)
+        let targetViewGlobalOrigin = targetView.convert(CGPoint(x: targetView.bounds.midX, y: targetView.bounds.midY),
+                                                        to: nil)
         
         let arrowPlacement: ArrowViewPlacement = selfGlobalOrigin.y < targetViewGlobalOrigin.y ? .bottom : .top
         return arrowPlacement
@@ -348,11 +354,17 @@ extension ArrowContainerView {
         let superView: UIView = contentContainer
         superView.addSubview(view)
         
-        NSLayoutConstraint.activate([
-            view.leadingAnchor.constraint(equalTo: superView.leadingAnchor, constant: contentViewInsets.left),
-            superView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: contentViewInsets.right),
-            view.topAnchor.constraint(equalTo: superView.topAnchor, constant: contentViewInsets.top),
-            superView.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: contentViewInsets.bottom)])
+        let leading = view.leadingAnchor.constraint(equalTo: superView.leadingAnchor, constant: contentViewInsets.left)
+        let trailing = superView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: contentViewInsets.right)
+        let top = view.topAnchor.constraint(equalTo: superView.topAnchor, constant: contentViewInsets.top)
+        let bottom = superView.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: contentViewInsets.bottom)
+        
+        NSLayoutConstraint.activate([leading, trailing, top, bottom])
+        
+        contentConstraints.leading = leading
+        contentConstraints.trailing = trailing
+        contentConstraints.top = top
+        contentConstraints.bottom = bottom
     }
     
     // MARK: Setup initial appearance
@@ -454,4 +466,18 @@ private struct ArrowParams {
         }
     }
     var anchor: ArrowViewPrivateAnchor = .toXCenterOf(TargetViewBox(targetView: nil))
+}
+
+private final class ContentConstraints {
+    weak var top: NSLayoutConstraint?
+    weak var bottom: NSLayoutConstraint?
+    weak var leading: NSLayoutConstraint?
+    weak var trailing: NSLayoutConstraint?
+    
+    func updateWith(_ insets: UIEdgeInsets) {
+        top?.constant = insets.top
+        bottom?.constant = insets.bottom
+        leading?.constant = insets.left
+        trailing?.constant = insets.right
+    }
 }
