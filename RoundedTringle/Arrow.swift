@@ -278,6 +278,9 @@ extension ArrowContainerView {
         case .bottom :arrowOriginY = bounds.height - ArrowConstants.arrowHeight
         case .hidden: arrowOriginY = -ArrowConstants.arrowHeight
         }
+        /* Возможен кейс, когда у arrowView получается позция 0,0. Поэтому задаём отрицательную коордану для .hidden.
+         Если не задать, то поворот стрелки не будет сделан, т.к логика в методе layoutSubviews() не сможет отличить
+         реально заданные координаты от дефолтных для спрятанного состояния */
         return arrowOriginY
     }
     
@@ -350,8 +353,6 @@ extension ArrowContainerView {
             superView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: contentViewInsets.right),
             view.topAnchor.constraint(equalTo: superView.topAnchor, constant: contentViewInsets.top),
             superView.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: contentViewInsets.bottom)])
-        
-        view.heightAnchor.constraint(equalToConstant: 100).isActive = true // FIXME: delete
     }
     
     // MARK: Setup initial appearance
@@ -368,7 +369,7 @@ extension ArrowContainerView {
         shapeLayer.frame = layerFrame
         shapeLayer.path = bezierPath.cgPath
         
-        let arrowY = -ArrowConstants.arrowHeight
+        let arrowY = getArrowOriginY(forPlacement: .hidden)
         let larrowFrame = CGRect(x: 0, y: arrowY, width: ArrowConstants.arrowWidth, height: ArrowConstants.arrowHeight)
         arrowView.frame = larrowFrame
         arrowView.layer.mask = shapeLayer

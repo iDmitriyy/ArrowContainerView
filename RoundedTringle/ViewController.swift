@@ -10,8 +10,11 @@ import UIKit
 
 class ViewController: UIViewController {
 
+    @IBOutlet weak var stackView: UIStackView!
+    
     override func viewDidLoad() {
         super.viewDidLoad()
+        //showArrowViews()
         // Do any additional setup after loading the view, typically from a nib.
     }
     
@@ -19,15 +22,13 @@ class ViewController: UIViewController {
         super.viewDidAppear(animated)
         
         setupArrowTest()
-        
-        // setupButtonTest()
     }
     
     private func setupArrowTest() {
         let arrow = ArrowContainerView(contentView: UIButton(type: .custom))
         installContentView(arrow)
         
-        let bottomTargetView = TargetView()
+        let bottomTargetView = UIView()
         let bottomTargetCenter = bottomTargetView.leadingAnchor.constraint(equalTo: self.view.leadingAnchor)
         //bottomTargetView.centerXAnchor.constraint(equalTo: self.view.centerXAnchor, constant: -40)
         do {
@@ -43,7 +44,7 @@ class ViewController: UIViewController {
                 ])
         }
         
-        let topTargetView = TargetView()
+        let topTargetView = UIView()
         do {
             topTargetView.translatesAutoresizingMaskIntoConstraints = false
             topTargetView.backgroundColor = .cyan
@@ -67,6 +68,73 @@ class ViewController: UIViewController {
             // arrow.setArrowCenteredTo(targetView: topTargetView)
             arrow.updateArrowPosition()
         }
+    }
+    
+    func showArrowViews() {
+        let offsetTop = makeArrowView()
+        offsetTop.setArrowCenteredTo(anchor: .toOffset(xOffset: 40, placement: .top))
+        
+        let offsetBottom = makeArrowView()
+        offsetBottom.setArrowCenteredTo(anchor: .toOffset(xOffset: 80, placement: .bottom))
+        
+        let ratioTop = makeArrowView()
+        ratioTop.setArrowCenteredTo(anchor: .toSelfWidth(ratio: 1/3, placement: .top))
+        
+        let ratioBottom = makeArrowView()
+        ratioBottom.setArrowCenteredTo(anchor: .toSelfWidth(ratio: 1/2, placement: .bottom))
+        
+        let arrowViewTargetTop = makeArrowView()
+        let topTarget = makeTarget(withLeading: 120)
+        arrowViewTargetTop.setArrowCenteredTo(anchor: .toXCenterOf(targetView: topTarget.target))
+        
+        let arrowViewTargetBottom = makeArrowView()
+        let bottomTarget = makeTarget(withLeading: 160)
+        arrowViewTargetBottom.setArrowCenteredTo(anchor: .toXCenterOf(targetView: bottomTarget.target))
+        
+        let all: [UIView] = [offsetTop,
+                             offsetBottom,
+                             ratioTop,
+                             ratioBottom,
+                             topTarget.container,
+                             arrowViewTargetTop,
+                             arrowViewTargetBottom,
+                             bottomTarget.container]
+        
+        for view in all {
+            stackView.addArrangedSubview(view)
+        }
+        
+    }
+    
+    func makeArrowView() -> ArrowContainerView<UILabel> {
+        let text = "Lorem ipsum dolor sit er elit lamet, consectetaur cillium adipisicing pecu, sed do eiusmod tempor"
+        let arrowView = ArrowContainerView(contentView: UILabel())
+        arrowView.contentViewInsets = UIEdgeInsets(top: 8, left: 16, bottom: 8, right: 16)
+        arrowView.view.numberOfLines = 0
+        arrowView.view.text = text
+        return arrowView
+    }
+    
+    func makeTarget(withLeading leading: CGFloat) -> (target: UIView, container: UIView) {
+        let targetViewContainer = UIView()
+        let targetView = UIView()
+        do {
+            targetViewContainer.translatesAutoresizingMaskIntoConstraints = false
+            targetView.translatesAutoresizingMaskIntoConstraints = false
+            targetView.backgroundColor = UIColor.magenta
+            
+            let superView: UIView = targetViewContainer
+            superView.addSubview(targetView)
+            
+            NSLayoutConstraint.activate([
+                targetView.leadingAnchor.constraint(equalTo: superView.leadingAnchor, constant: leading),
+                targetView.topAnchor.constraint(equalTo: superView.topAnchor),
+                superView.bottomAnchor.constraint(equalTo: targetView.bottomAnchor),
+                targetView.widthAnchor.constraint(equalToConstant: 40),
+                targetView.heightAnchor.constraint(equalToConstant: 10)])
+            
+        }
+        return (targetView, targetViewContainer)
     }
     
     private var button: UIButton?
@@ -101,11 +169,5 @@ class ViewController: UIViewController {
             superView.trailingAnchor.constraint(equalTo: subView.trailingAnchor, constant: 8),
             subView.topAnchor.constraint(equalTo: superView.topAnchor, constant: 130)
             ])
-    }
-}
-
-final class TargetView: UIView {
-    override func layoutSubviews() {
-        super.layoutSubviews()
     }
 }
