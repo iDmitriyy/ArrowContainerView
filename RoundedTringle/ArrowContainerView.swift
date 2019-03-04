@@ -458,7 +458,6 @@ private final class TargetViewBox {
 }
 
 private struct ArrowParams {
-    // FIXME: may be make immutable
     private(set) var previousPlacement: ArrowViewPlacement = .hidden
     var placement: ArrowViewPlacement = .hidden {
         didSet {
