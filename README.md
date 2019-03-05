@@ -1,7 +1,9 @@
 # ArrowContainerView
 
 
-![A container view with arrow](ArrowDemonstration480.gif)
+![A container view with arrow](ArrowDemonstration480.png)
+
+![](ArrowDemonstration.gif)
 
 Конфигурация производится с помощью 1 из 3 вариантов:
 
