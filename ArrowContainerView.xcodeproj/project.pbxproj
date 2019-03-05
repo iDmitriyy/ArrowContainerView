@@ -9,7 +9,7 @@
 /* Begin PBXBuildFile section */
 		8E6FB88A221C5E0D005B93BB /* ArrowContainerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E6FB889221C5E0D005B93BB /* ArrowContainerView.swift */; };
 		8E8A5EA1221AF8EE008F612A /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E8A5EA0221AF8EE008F612A /* AppDelegate.swift */; };
-		8E8A5EA3221AF8EE008F612A /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E8A5EA2221AF8EE008F612A /* ViewController.swift */; };
+		8E8A5EA3221AF8EE008F612A /* ArrowContainerExampleViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E8A5EA2221AF8EE008F612A /* ArrowContainerExampleViewController.swift */; };
 		8E8A5EA6221AF8EE008F612A /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 8E8A5EA4221AF8EE008F612A /* Main.storyboard */; };
 		8E8A5EA8221AF8F0008F612A /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 8E8A5EA7221AF8F0008F612A /* Assets.xcassets */; };
 		8E8A5EAB221AF8F0008F612A /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 8E8A5EA9221AF8F0008F612A /* LaunchScreen.storyboard */; };
@@ -38,7 +38,7 @@
 		8E6FB889221C5E0D005B93BB /* ArrowContainerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArrowContainerView.swift; sourceTree = "<group>"; };
 		8E8A5E9D221AF8EE008F612A /* ArrowContainerView.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ArrowContainerView.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		8E8A5EA0221AF8EE008F612A /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
-		8E8A5EA2221AF8EE008F612A /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
+		8E8A5EA2221AF8EE008F612A /* ArrowContainerExampleViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArrowContainerExampleViewController.swift; sourceTree = "<group>"; };
 		8E8A5EA5221AF8EE008F612A /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		8E8A5EA7221AF8F0008F612A /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		8E8A5EAA221AF8F0008F612A /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
@@ -100,7 +100,7 @@
 			isa = PBXGroup;
 			children = (
 				8E8A5EA0221AF8EE008F612A /* AppDelegate.swift */,
-				8E8A5EA2221AF8EE008F612A /* ViewController.swift */,
+				8E8A5EA2221AF8EE008F612A /* ArrowContainerExampleViewController.swift */,
 				8E6FB889221C5E0D005B93BB /* ArrowContainerView.swift */,
 				8E8A5EAC221AF8F0008F612A /* Info.plist */,
 				8E8A5EA4221AF8EE008F612A /* Main.storyboard */,
@@ -260,7 +260,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				8E6FB88A221C5E0D005B93BB /* ArrowContainerView.swift in Sources */,
-				8E8A5EA3221AF8EE008F612A /* ViewController.swift in Sources */,
+				8E8A5EA3221AF8EE008F612A /* ArrowContainerExampleViewController.swift in Sources */,
 				8E8A5EA1221AF8EE008F612A /* AppDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

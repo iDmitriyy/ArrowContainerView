@@ -53,8 +53,8 @@ open class ArrowContainerView<T: UIView>: UIView {
     }
     
     /// Для случаев, когда в конструктор View нужно передать параметры. Например UIButton(type: .custom)
-    init(contentView: T) {
-        view = contentView
+    init(view: T) {
+        self.view = view
         super.init(frame: .zero)
         initialSetup()
     }
@@ -63,7 +63,7 @@ open class ArrowContainerView<T: UIView>: UIView {
     ///
     open override var backgroundColor: UIColor? {
         didSet {
-            let color: UIColor = backgroundColor ?? (view.backgroundColor ?? .white)
+            let color: UIColor = backgroundColor ?? .white
             super.backgroundColor = nil
             
             arrowView.tintColor = color
@@ -75,6 +75,12 @@ open class ArrowContainerView<T: UIView>: UIView {
     open override func layoutSubviews() {
         super.layoutSubviews()
         
+        DispatchQueue.main.async { [weak self] in
+            self?.alignArrow()
+        }
+    }
+    
+    private func alignArrow() {
         let arrowFrame: CGRect
         switch arrowParams.anchor {
         case .toOffset(let xOffset):
@@ -125,18 +131,20 @@ open class ArrowContainerView<T: UIView>: UIView {
         }
     }
     
+    // MARK: Public Interface
     public final func setArrowCenteredTo(anchor: ArrowViewXAnchor) {
-        
         switch anchor {
         case let .toOffset(xOffset, placement):
             arrowParams.placement = placement
             arrowParams.anchor = .toOffset(xOffset: xOffset)
+            
         case let .toSelfWidth(ratio, placement):
             arrowParams.placement = placement
             arrowParams.anchor = .toSelfWidth(ratio: ratio)
+            
         case let .toXCenterOf(targetView):
-            arrowParams.anchor = .toXCenterOf(TargetViewBox(targetView: targetView))
             // arrowParams.placement в этом случае не задается, т.к будет автоматически посчитан в layoutSubviews()
+            arrowParams.anchor = .toXCenterOf(TargetViewBox(targetView: targetView))
         }
         
         makeArrowVisible(true)
@@ -152,6 +160,11 @@ open class ArrowContainerView<T: UIView>: UIView {
      Пример: изменение текста в UILabel */
     public final func updateArrowPosition() {
         setNeedsLayout() // Чтоб в следующем проходе laoyout'a вызывался layoutSubViews(), где происходит позиционирование
+    }
+    
+    public final func setCornerRadius(_ radius: CGFloat) {
+        contentContainer.layer.cornerRadius = radius
+        contentContainer.layer.masksToBounds = true
     }
 }
 
@@ -246,7 +259,7 @@ extension ArrowContainerView {
         let targetViewCenter = CGPoint(x: targetView.bounds.midX,
                                        y: targetView.bounds.midY) // центр targetView в её собственной системе координат
         
-        let targetConvertedCenter = targetView.convert(targetViewCenter, to: self)
+        let targetConvertedCenter = convert(targetViewCenter, from: targetView)
         let possibleArrowCenterX = targetConvertedCenter.x
         
         return adjustedArrowOriginXFor(possibleArrowCenterX: possibleArrowCenterX)
@@ -255,7 +268,6 @@ extension ArrowContainerView {
     /// Always returns .bottom or .top, never .hidden
     private func getArrowPlacement(relativeTo targetView: UIView) -> ArrowViewPlacement {
         // Положение в координатном пространстве UIWindow
-        let superView = self.superview
         let selfGlobalOrigin = self.convert(CGPoint(x: self.bounds.midX, y: self.bounds.midY),
                                             to: nil)
         let targetViewGlobalOrigin = targetView.convert(CGPoint(x: targetView.bounds.midX, y: targetView.bounds.midY),
@@ -369,7 +381,7 @@ extension ArrowContainerView {
     
     // MARK: Setup initial appearance
     private func setupInitialAppearance() {
-        backgroundColor = nil
+        backgroundColor = .black
         setupArrowInitialApperanace()
     }
     
@@ -382,8 +394,8 @@ extension ArrowContainerView {
         shapeLayer.path = bezierPath.cgPath
         
         let arrowY = getArrowOriginY(forPlacement: .hidden)
-        let larrowFrame = CGRect(x: 0, y: arrowY, width: ArrowConstants.arrowWidth, height: ArrowConstants.arrowHeight)
-        arrowView.frame = larrowFrame
+        let arrowFrame = CGRect(x: 0, y: arrowY, width: ArrowConstants.arrowWidth, height: ArrowConstants.arrowHeight)
+        arrowView.frame = arrowFrame
         arrowView.layer.mask = shapeLayer
         arrowView.clipsToBounds = true
         
@@ -403,11 +415,11 @@ extension ArrowContainerView {
         arrowPath.addCurve(to: CGPoint(x: 9, y: 3), controlPoint1: CGPoint(x: 0, y: 0), controlPoint2: CGPoint(x: 5, y: 0))
         arrowPath.addCurve(to: CGPoint(x: 16, y: 8), controlPoint1: CGPoint(x: 13, y: 6), controlPoint2: CGPoint(x: 13, y: 8))
         arrowPath.addCurve(to: CGPoint(x: 23, y: 3), controlPoint1: CGPoint(x: 19, y: 8), controlPoint2: CGPoint(x: 19, y: 6))
-        arrowPath.addCurve(to: CGPoint(x: 34, y: 0), controlPoint1: CGPoint(x: 27, y: 0), controlPoint2: CGPoint(x: 34, y: 0))
+        arrowPath.addCurve(to: CGPoint(x: 32, y: 0), controlPoint1: CGPoint(x: 27, y: 0), controlPoint2: CGPoint(x: 32, y: 0))
         arrowPath.addLine(to: CGPoint(x: 0, y: 0))
         
         arrowPath.close()
-        arrowPath.fill()
+        //arrowPath.fill() - (для этой операции требуется CGContext, но здесь она не нужна)
         return arrowPath
     }
 }
