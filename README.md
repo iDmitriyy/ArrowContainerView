@@ -1,7 +1,7 @@
 # ArrowContainerView
 
 
-[[ ArrowDemonstration.png | height = 100px ]]
+[[(ArrowDemonstration.png) | height = 100px ]]
 
 ![A container view with arrow](ArrowDemonstration.png)
 
