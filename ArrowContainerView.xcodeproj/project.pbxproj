@@ -79,7 +79,7 @@
 		8E8A5E94221AF8EE008F612A = {
 			isa = PBXGroup;
 			children = (
-				8E8A5E9F221AF8EE008F612A /* RoundedTringle */,
+				8E8A5E9F221AF8EE008F612A /* ArrowContainerView */,
 				8E8A5EB4221AF8F0008F612A /* RoundedTringleTests */,
 				8E8A5EBF221AF8F0008F612A /* RoundedTringleUITests */,
 				8E8A5E9E221AF8EE008F612A /* Products */,
@@ -96,7 +96,7 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
-		8E8A5E9F221AF8EE008F612A /* RoundedTringle */ = {
+		8E8A5E9F221AF8EE008F612A /* ArrowContainerView */ = {
 			isa = PBXGroup;
 			children = (
 				8E8A5EA0221AF8EE008F612A /* AppDelegate.swift */,
@@ -107,7 +107,7 @@
 				8E8A5EA7221AF8F0008F612A /* Assets.xcassets */,
 				8E8A5EA9221AF8F0008F612A /* LaunchScreen.storyboard */,
 			);
-			path = RoundedTringle;
+			path = ArrowContainerView;
 			sourceTree = "<group>";
 		};
 		8E8A5EB4221AF8F0008F612A /* RoundedTringleTests */ = {
