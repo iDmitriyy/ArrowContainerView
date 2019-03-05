@@ -1,7 +1,8 @@
 # ArrowContainerView
 
+[[ https://github.com/smartappdeveloop/ArrowContainerView/blob/master/ArrowDemonstration.png | height = 100px ]]
 
-![A container view with arrow](ArrowDemonstration480.gif)
+![Animated](ArrowDemonstration480.gif)
 
 Конфигурация производится с помощью 1 из 3 вариантов:
 
