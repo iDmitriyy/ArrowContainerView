@@ -13,8 +13,8 @@
 		8E8A5EA6221AF8EE008F612A /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 8E8A5EA4221AF8EE008F612A /* Main.storyboard */; };
 		8E8A5EA8221AF8F0008F612A /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 8E8A5EA7221AF8F0008F612A /* Assets.xcassets */; };
 		8E8A5EAB221AF8F0008F612A /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 8E8A5EA9221AF8F0008F612A /* LaunchScreen.storyboard */; };
-		8E8A5EB6221AF8F0008F612A /* RoundedTringleTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E8A5EB5221AF8F0008F612A /* RoundedTringleTests.swift */; };
-		8E8A5EC1221AF8F0008F612A /* RoundedTringleUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E8A5EC0221AF8F0008F612A /* RoundedTringleUITests.swift */; };
+		8E8A5EB6221AF8F0008F612A /* ArrowContainerViewTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E8A5EB5221AF8F0008F612A /* ArrowContainerViewTests.swift */; };
+		8E8A5EC1221AF8F0008F612A /* ArrowContainerViewUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E8A5EC0221AF8F0008F612A /* ArrowContainerViewUITests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -44,10 +44,10 @@
 		8E8A5EAA221AF8F0008F612A /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		8E8A5EAC221AF8F0008F612A /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		8E8A5EB1221AF8F0008F612A /* ArrowContainerViewTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ArrowContainerViewTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		8E8A5EB5221AF8F0008F612A /* RoundedTringleTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoundedTringleTests.swift; sourceTree = "<group>"; };
+		8E8A5EB5221AF8F0008F612A /* ArrowContainerViewTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArrowContainerViewTests.swift; sourceTree = "<group>"; };
 		8E8A5EB7221AF8F0008F612A /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		8E8A5EBC221AF8F0008F612A /* ArrowContainerViewUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ArrowContainerViewUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		8E8A5EC0221AF8F0008F612A /* RoundedTringleUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoundedTringleUITests.swift; sourceTree = "<group>"; };
+		8E8A5EC0221AF8F0008F612A /* ArrowContainerViewUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArrowContainerViewUITests.swift; sourceTree = "<group>"; };
 		8E8A5EC2221AF8F0008F612A /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -80,8 +80,8 @@
 			isa = PBXGroup;
 			children = (
 				8E8A5E9F221AF8EE008F612A /* ArrowContainerView */,
-				8E8A5EB4221AF8F0008F612A /* RoundedTringleTests */,
-				8E8A5EBF221AF8F0008F612A /* RoundedTringleUITests */,
+				8E8A5EB4221AF8F0008F612A /* ArrowContainerViewTests */,
+				8E8A5EBF221AF8F0008F612A /* ArrowContainerViewUITests */,
 				8E8A5E9E221AF8EE008F612A /* Products */,
 			);
 			sourceTree = "<group>";
@@ -110,22 +110,22 @@
 			path = ArrowContainerView;
 			sourceTree = "<group>";
 		};
-		8E8A5EB4221AF8F0008F612A /* RoundedTringleTests */ = {
+		8E8A5EB4221AF8F0008F612A /* ArrowContainerViewTests */ = {
 			isa = PBXGroup;
 			children = (
-				8E8A5EB5221AF8F0008F612A /* RoundedTringleTests.swift */,
+				8E8A5EB5221AF8F0008F612A /* ArrowContainerViewTests.swift */,
 				8E8A5EB7221AF8F0008F612A /* Info.plist */,
 			);
-			path = RoundedTringleTests;
+			path = ArrowContainerViewTests;
 			sourceTree = "<group>";
 		};
-		8E8A5EBF221AF8F0008F612A /* RoundedTringleUITests */ = {
+		8E8A5EBF221AF8F0008F612A /* ArrowContainerViewUITests */ = {
 			isa = PBXGroup;
 			children = (
-				8E8A5EC0221AF8F0008F612A /* RoundedTringleUITests.swift */,
+				8E8A5EC0221AF8F0008F612A /* ArrowContainerViewUITests.swift */,
 				8E8A5EC2221AF8F0008F612A /* Info.plist */,
 			);
-			path = RoundedTringleUITests;
+			path = ArrowContainerViewUITests;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -269,7 +269,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				8E8A5EB6221AF8F0008F612A /* RoundedTringleTests.swift in Sources */,
+				8E8A5EB6221AF8F0008F612A /* ArrowContainerViewTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -277,7 +277,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				8E8A5EC1221AF8F0008F612A /* RoundedTringleUITests.swift in Sources */,
+				8E8A5EC1221AF8F0008F612A /* ArrowContainerViewUITests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -438,7 +438,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 226D4X4623;
-				INFOPLIST_FILE = RoundedTringle/Info.plist;
+				INFOPLIST_FILE = ArrowContainerView/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -456,7 +456,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 226D4X4623;
-				INFOPLIST_FILE = RoundedTringle/Info.plist;
+				INFOPLIST_FILE = ArrowContainerView/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",

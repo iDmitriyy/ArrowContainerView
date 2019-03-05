@@ -7,7 +7,7 @@
 //
 
 import XCTest
-@testable import RoundedTringle
+@testable import ArrowContainerView
 
 class RoundedTringleTests: XCTestCase {
 
