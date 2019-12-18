@@ -2,7 +2,7 @@
 
 [https://github.com/smartappdeveloop/ArrowContainerView/blob/master/ArrowDemonstration.png | height = 100px ]
 
-![UDF](ArrowDemonstration.png)
+![UDF | height = 100px](ArrowDemonstration.png)
 
 ![Animated](ArrowDemonstration480.gif)
 
