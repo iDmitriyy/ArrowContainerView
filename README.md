@@ -1,8 +1,6 @@
 # ArrowContainerView
 
-[https://github.com/smartappdeveloop/ArrowContainerView/blob/master/ArrowDemonstration.png | height = 100px ]
-
-![UDF | height = 100px](ArrowDemonstration.png)
+![UDF](ArrowDemonstration.png)
 
 ![Animated](ArrowDemonstration480.gif)
 
