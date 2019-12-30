@@ -1,6 +1,6 @@
 # ArrowContainerView
 
-Generic решение для отображения контента со стрелкой. ArrowContainerView может содержат в себе любую UIView.
+Generic решение для отображения контента со стрелкой. ArrowContainerView может содержать в себе любую UIView.
 
 ![UDF](ArrowDemonstration.png)
 
